@@ -1,6 +1,9 @@
 {% extends "layout.html" %}
 {% import 'utils.html' as utils %}
 {% block title %}New - {{ config.NAME }}{% endblock %}
+{% block header %}
+
+{% endblock %}
 {% block content %}
 <div id="container">
 {% include "header.html" %}
@@ -9,19 +12,107 @@
 <h3 style="padding-bottom: 30px">Replying to {{ content }}</h3>
 {{ utils.display_thread(thread) }}
 {% else %}
-<h3 style="padding-bottom:20px;">New note</h3>
+<div class="tabbar">
+{% if request.args.get("question") == "1" %}
+<a href="{{ url_for('admin.admin_new') }}" class="tab">Note</a><a href="{{ url_for('admin.admin_new') }}?question=1" class="tab selected">Question</a>
+{% else %}
+<a href="{{ url_for('admin.admin_new') }}" class="tab selected">Note</a><a href="{{ url_for('admin.admin_new') }}?question=1" class="tab">Question</a>
 {% endif %}
-<form action="/api/new_note" method="POST" enctype="multipart/form-data">
+</div>
+{% endif %}
+<form action="/api/new_{% if request.args.get("question") == "1" %}question{%else%}note{%endif%}" method="POST" enctype="multipart/form-data">
 <input type="hidden" name="redirect" value="/">
 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<select name="visibility" style="padding:8px 10px;">
+{% for v in visibility %}
+<option value="{{v.name}}" {% if v == default_visibility %}selected="selected"{% endif %}>{{ v.value }}</option>
+{% endfor %}
+</select>
 {% if reply %}<input type="hidden" name="reply" value="{{reply}}">{% endif %}
-<textarea name="content" rows="10" cols="50" autofocus="autofocus">{{ content }}</textarea>
+
+<p><input type="text" name="summary" placeholder="summary/CW (optional)"></p>
+
+<p>
+{% for emoji in emojis %}
+<span class="ji">{{ emoji | emojify | safe }}</span>
+{% endfor %}
+{% for emoji in custom_emojis.values() %}
+<span class="ji"><img src="{{emoji.get_icon_url()}}" alt="{{emoji.name}}" title="{{emoji.name}}" class="custom-emoji"></span>
+{% endfor %}
+</p>
+
+<textarea name="content" rows="10" cols="50" autofocus="autofocus" designMode="on" style="font-size:1.2em;width:95%;">{{ content }}</textarea>
+
+<p>
 <input type="file" name="file">
+<p>
+<p>
+<input type="text" name="file_description" placeholder="attachment description (optional)">
+</p>
+
+{% if request.args.get("question") == "1" %}
 <div style="margin-top:20px;">
+    <p>Open for: <select name="open_for">
+    <option value="5">5 minutes</option>
+    <option value="10">10 minutes</option>
+    <option value="15">15 minutes</option>
+    <option value="30">30 minutes</option>
+    <option value="60">1 hour</option>
+    <option value="360">6 hour</option>
+    <option value="1440" selected>1 day</option>
+    <option value="4320">3 days</option>
+    <option value="10080">7 days</option>
+    </select></p>
+
+    <p><select name="of">
+        <option value="oneOf">Single choice</option>
+        <option value="anyOf">Multiple choices</option>
+    </select></p>
+
+    {% for i in range(4) %}
+    <p><input type="text" name="answer{{i}}" placeholder="Answer #{{i+1}}"></p>
+    {% endfor %}
+
+</div>
+{% endif %}
+
 <input type="submit" value="post">
 </div>
 </form>
 
 </div>
 </div>
-{% endblock %}
+<script>
+// The new post textarea
+var ta = document.getElementsByTagName("textarea")[0];
+// Helper for inserting text (emojis) in the textarea
+function insertAtCursor (textToInsert) {
+    ta.focus();
+    const isSuccess = document.execCommand("insertText", false, textToInsert);
+
+    // Firefox (non-standard method)
+    if (!isSuccess) {
+        // Credits to https://www.everythingfrontend.com/posts/insert-text-into-textarea-at-cursor-position.html
+        // get current text of the input
+        const value = ta.value;
+        // save selection start and end position
+        const start = ta.selectionStart;
+        const end = ta.selectionEnd;
+        // update the value with our text inserted
+        ta.value = value.slice(0, start) + textToInsert + value.slice(end);
+        // update cursor to be at the end of insertion
+        ta.selectionStart = ta.selectionEnd = start + textToInsert.length;
+    }
+}
+// Emoji click callback func
+var ji = function (ev) {
+    insertAtCursor(ev.target.attributes.alt.value + " ");
+    ta.focus()
+    //console.log(document.execCommand('insertText', false /*no UI*/, ev.target.attributes.alt.value));
+}
+// Enable the click for each emojis
+var items = document.getElementsByClassName("ji")
+for (var i = 0; i < items.length; i++) {
+    items[i].addEventListener('click', ji);
+}
+</script>{% endblock %}

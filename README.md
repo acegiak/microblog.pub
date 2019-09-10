@@ -5,323 +5,119 @@
     src="https://sos-ch-dk-2.exo.io/microblogpub/microblobpub.png" 
     width="200" height="200" border="0" alt="microblog.pub">
 </p>
+<p align="center">A self-hosted, single-user, <a href="https://activitypub.rocks">ActivityPub</a> powered microblog.</p>
 <p align="center">
-<a href="https://travis-ci.org/tsileo/microblog.pub"><img src="https://travis-ci.org/tsileo/microblog.pub.svg?branch=master" alt="Build Status"></a>
+<a href="https://d.a4.io/tsileo/microblog.pub"><img src="https://d.a4.io/api/badges/tsileo/microblog.pub/status.svg" alt="Build Status"></a>
 <a href="https://matrix.to/#/#microblog.pub:matrix.org"><img src="https://img.shields.io/badge/matrix-%23microblog.pub-blue.svg" alt="#microblog.pub on Matrix"></a>
 <a href="https://github.com/tsileo/microblog.pub/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-AGPL_3.0-blue.svg?style=flat" alt="License"></a>
+<a href="https://github.com/ambv/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 </p>
 
-<p align="center">A self-hosted, single-user, <a href="https://activitypub.rocks">ActivityPub</a> powered microblog.</p>
-
-**Still in early development.**
+**Still in early development/I do not recommend to run an instance yet.**
 
 ## Features
 
  - Implements a basic [ActivityPub](https://activitypub.rocks/) server (with federation)
-   - Compatible with [Mastodon](https://github.com/tootsuite/mastodon) and others (Pleroma, Hubzilla...)
-   - Also implements a remote follow compatible with Mastodon instances
+   - S2S (Server to Server) and C2S (Client to Server) protocols
+   - Compatible with [Mastodon](https://joinmastodon.org/) and others ([Pleroma](https://pleroma.social/), Misskey, Plume, PixelFed, Hubzilla...)
  - Exposes your outbox as a basic microblog
- - Implements [IndieAuth](https://indieauth.spec.indieweb.org/) endpoints (authorization and token endpoint)
-   - U2F support
-   - You can use your ActivityPub identity to login to other websites/app
+   - Support all content types from the Fediverse (`Note`, `Article`, `Page`, `Video`, `Image`, `Question`...)
+   - Markdown support
+   - Server-side code syntax highlighting
  - Comes with an admin UI with notifications and the stream of people you follow
- - Allows you to attach files to your notes
-   - Privacy-aware image upload endpoint that strip EXIF meta data before storing the file
+   - Private "bookmark" support
+   - List support
+   - Allows you to attach files to your notes
+   - Custom emojus
+ - Cares about your privacy
+   - The image upload endpoint strips EXIF meta data before storing the file
+   - Every attachment/media is cached (or proxied) by the server
  - No JavaScript, **that's it**. Even the admin UI is pure HTML/CSS
+   - (well except for the Emoji picker within the admin, but it's only few line of hand-written JavaScript)
  - Easy to customize (the theme is written Sass)
    - mobile-friendly theme
    - with dark and light version
- - Microformats aware (exports `h-feed`, `h-entry`, `h-cards`, ...)
- - Exports RSS/Atom/[JSON](https://jsonfeed.org/) feeds
+ - IndieWeb citizen
+   - Microformats aware (exports `h-feed`, `h-entry`, `h-cards`, ...)
+     - Export a feed in the HTML that is WebSub compatible
+   - Implements [IndieAuth](https://indieauth.spec.indieweb.org/) endpoints (authorization and token endpoint)
+     - You can use your ActivityPub identity to login to other websites/app (with U2F support)
+   - Send [Webmentions](https://www.w3.org/TR/webmention/) to linked website (only for public notes)
+   - Exports RSS/Atom/[JSON](https://jsonfeed.org/) feeds
     - You stream/timeline is also available in an (authenticated) JSON feed
- - Comes with a tiny HTTP API to help posting new content and and read your inbox/notifications
- - Easy to "cache" (the external/public-facing microblog part)
-   - With a good setup, cached content can be served most of the time
-   - You can setup a "purge" hook to let you invalidate cache when the microblog was updated
+  - Comes with a tiny HTTP API to help posting new content and and read your inbox/notifications
  - Deployable with Docker (Docker compose for everything: dev, test and deployment)
  - Focused on testing
-   - The core ActivityPub code/tests are in [Little Boxes](https://github.com/tsileo/little-boxes)
-   - Tested against the [official ActivityPub test suite](https://test.activitypub.rocks/) ([report submitted](https://github.com/w3c/activitypub/issues/308))
-   - CI runs "federation" tests against two instances
-   - Manually tested against [Mastodon](https://github.com/tootsuite/mastodon)
-   - Project is running an up-to-date instance
+   - Tested against the [official ActivityPub test suite](https://test.activitypub.rocks/), see [the results](https://activitypub.rocks/implementation-report/)
+   - [CI runs "federation" tests against two instances](https://d.a4.io/tsileo/microblog.pub)
+   - Project is running 2 up-to-date instances ([here](https://microblog.pub) and [there](https://a4.io))
+   - Manually tested against other major platforms
 
-## ActivityPub
 
-microblog.pub implements an [ActivityPub](http://activitypub.rocks/) server, it implements both the client to server API and the federated server to server API.
+## User Guide
 
-Activities are verified using HTTP Signatures or by fetching the content on the remote server directly.
+Remember that _microblog.pub_ is still in early development.
 
-## Running your instance
+The easiest and recommended way to run _microblog.pub_ in production is to use the provided docker-compose config.
+
+First install [Docker](https://docs.docker.com/install/) and [Docker Compose](https://docs.docker.com/compose/install/).
+Python is not needed on the host system.
+
+Note that all the generated data (config included) will be stored on the host (i.e. not only in Docker) in `config/` and `data/`.
 
 ### Installation
 
 ```shell
 $ git clone https://github.com/tsileo/microblog.pub
 $ cd microblog.pub
-$ pip install -r requirements.txt
-$ make css
-$ cp -r config/me.sample.yml config/me.yml
+$ make config
 ``` 
 
-### Configuration
+Once the initial configuration is done, you can still tweak the config by editing `config/me.yml` directly.
 
-```shell
-$ make password
-Password: <enter a password; nothing will show on screen>
-$2b$12$iW497g...
-```
-
-Edit `config/me.yml` to add the above-generated password, like so:
-
-```
-username: 'username'
-name: 'Your Name'
-icon_url: 'https://you-avatar-url'
-domain: 'your-domain.tld'
-summary: 'your summary'
-https: true
-pass: $2b$12$iW497g...
-```
 
 ### Deployment
 
-Note: some of the docker yml files use version 3 of [docker-compose](https://docs.docker.com/compose/install/).
+To spawn the docker-compose project (running this command will also update _microblog.pub_ to latest and restart everything if it's already running):
 
 ```shell
-$ docker-compose up -d
+$ make run
 ```
+
+By default, the server will listen on `localhost:5005` (http://localhost:5005 should work if you're running locally).
+
+For production, you need to setup a reverse proxy (nginx, caddy) to forward your domain to the local server 
+(and check [certbot](https://certbot.eff.org/) for getting a free TLS certificate).
+
+
+### HTTP API
+
+See [docs/api.md](docs/api.md) for the internal HTTP API documentation.
+
+
+### Backup
+
+The easiest way to backup all of your data is to backup the `microblog.pub/` directory directly (that's what I do and I have been able to restore super easily).
+It should be safe to copy the directory while the Docker compose project is running.
+
 
 ## Development
 
-The most convenient way to hack on microblog.pub is to run the server locally, and run
+The project requires Python3.7+.
 
+The most convenient way to hack on _microblog.pub_ is to run the Python server on the host directly, and evetything else in Docker.
 
 ```shell
-# One-time setup
+# One-time setup (in a new virtual env)
 $ pip install -r requirements.txt
-# Start the Celery worker, RabbitMQ and MongoDB
-$ docker-compose -f docker-compose-dev.yml up -d
+# Start MongoDB and poussetaches
+$ make poussetaches
+$ env POUSSETACHES_AUTH_KEY="<secret-key>" docker-compose -f docker-compose-dev.yml up -d
 # Run the server locally
-$ FLASK_DEBUG=1 MICROBLOGPUB_DEBUG=1 FLASK_APP=app.py flask run -p 5005 --with-threads
-```
-
-## API
-
-Your admin API key can be found at `config/admin_api_key.key`.
-
-## ActivityPub API
-
-### GET /
-
-Returns the actor profile, with links to all the "standard" collections.
-
-### GET /tags/:tag
-
-Special collection that reference notes with the given tag.
-
-### GET /stream
-
-Special collection that returns the stream/inbox as displayed in the UI.
-
-## User API
-
-The user API is used by the admin UI (and requires a CSRF token when used with a regular user session), but it can also be accessed with an API key.
-
-All the examples are using [HTTPie](https://httpie.org/).
-
-### POST /api/note/delete{?id}
-
-Deletes the given note `id` (the note must from the instance outbox).
-
-Answers a **201** (Created) status code.
-
-You can pass the `id` via JSON, form data or query argument.
-
-#### Example
-
-```shell
-$ http POST https://microblog.pub/api/note/delete Authorization:'Bearer <token>' id=http://microblob.pub/outbox/<note_id>/activity
-```
-
-#### Response
-
-```json
-{
-    "activity": "https://microblog.pub/outbox/<delete_id>"
-}
-```
-
-### POST /api/note/pin{?id}
-
-Adds the given note `id` (the note must from the instance outbox) to the featured collection (and pins it on the homepage).
-
-Answers a **201** (Created) status code.
-
-You can pass the `id` via JSON, form data or query argument.
-
-#### Example
-
-```shell
-$ http POST https://microblog.pub/api/note/pin Authorization:'Bearer <token>' id=http://microblob.pub/outbox/<note_id>/activity
-```
-
-#### Response
-
-```json
-{
-    "pinned": true
-}
-```
-
-### POST /api/note/unpin{?id}
-
-Removes the given note `id` (the note must from the instance outbox) from the featured collection (and un-pins it).
-
-Answers a **201** (Created) status code.
-
-You can pass the `id` via JSON, form data or query argument.
-
-#### Example
-
-```shell
-$ http POST https://microblog.pub/api/note/unpin Authorization:'Bearer <token>' id=http://microblob.pub/outbox/<note_id>/activity
-```
-
-#### Response
-
-```json
-{
-    "pinned": false
-}
-```
-
-### POST /api/like{?id}
-
-Likes the given activity.
-
-Answers a **201** (Created) status code.
-
-You can pass the `id` via JSON, form data or query argument.
-
-#### Example
-
-```shell
-$ http POST https://microblog.pub/api/like Authorization:'Bearer <token>' id=http://activity-iri.tld
-```
-
-#### Response
-
-```json
-{
-    "activity": "https://microblog.pub/outbox/<like_id>"
-}
-```
-
-### POST /api/boost{?id}
-
-Boosts/Announces the given activity.
-
-Answers a **201** (Created) status code.
-
-You can pass the `id` via JSON, form data or query argument.
-
-#### Example
-
-```shell
-$ http POST https://microblog.pub/api/boost Authorization:'Bearer <token>' id=http://activity-iri.tld
-```
-
-#### Response
-
-```json
-{
-    "activity": "https://microblog.pub/outbox/<announce_id>"
-}
-```
-
-### POST /api/block{?actor}
-
-Blocks the given actor, all activities from this actor will be dropped after that.
-
-Answers a **201** (Created) status code.
-
-You can pass the `id` via JSON, form data or query argument.
-
-#### Example
-
-```shell
-$ http POST https://microblog.pub/api/block Authorization:'Bearer <token>' actor=http://actor-iri.tld/
-```
-
-#### Response
-
-```json
-{
-    "activity": "https://microblog.pub/outbox/<block_id>"
-}
-```
-
-### POST /api/follow{?actor}
-
-Follows the given actor.
-
-Answers a **201** (Created) status code.
-
-You can pass the `id` via JSON, form data or query argument.
-
-#### Example
-
-```shell
-$ http POST https://microblog.pub/api/follow Authorization:'Bearer <token>' actor=http://actor-iri.tld/
-```
-
-#### Response
-
-```json
-{
-    "activity": "https://microblog.pub/outbox/<follow_id>"
-}
-```
-
-### POST /api/new_note{?content,reply}
-
-Creates a new note. `reply` is the IRI of the "replied" note if any.
-
-Answers a **201** (Created) status code.
-
-You can pass the `content` and `reply` via JSON, form data or query argument.
-
-#### Example
-
-```shell
-$ http POST https://microblog.pub/api/new_note Authorization:'Bearer <token>' content=hello
-```
-
-#### Response
-
-```json
-{
-    "activity": "https://microblog.pub/outbox/<create_id>"
-}
-```
-
-
-### GET /api/stream
-
-
-#### Example
-
-```shell
-$ http GET https://microblog.pub/api/stream Authorization:'Bearer <token>'
-```
-
-#### Response
-
-```json
+$ FLASK_DEBUG=1 MICROBLOGPUB_DEBUG=1 FLASK_APP=app.py POUSSETACHES_AUTH_KEY="<secret-key>" flask run -p 5005 --with-threads
 ```
 
 
 ## Contributions
 
-PRs are welcome, please open an issue to start a discussion before your start any work.
+Contributions/PRs are welcome, please open an issue to start a discussion before your start any work.

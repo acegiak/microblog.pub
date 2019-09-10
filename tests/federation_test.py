@@ -19,7 +19,7 @@ class Instance(object):
     def __init__(self, name, host_url, docker_url=None):
         self.host_url = host_url
         self.docker_url = docker_url or host_url
-        self._create_delay = 12
+        self._create_delay = 10
         with open(
             os.path.join(
                 os.path.dirname(os.path.abspath(__file__)),
@@ -32,15 +32,13 @@ class Instance(object):
     def _do_req(self, url):
         """Used to parse collection."""
         url = url.replace(self.docker_url, self.host_url)
-        resp = requests.get(url, headers={'Accept': 'application/activity+json'})
+        resp = requests.get(url, headers={"Accept": "application/activity+json"})
         resp.raise_for_status()
         return resp.json()
 
     def _parse_collection(self, payload=None, url=None):
         """Parses a collection (go through all the pages)."""
-        return parse_collection(
-            url=url, payload=payload, fetcher=self._do_req,
-        )
+        return parse_collection(url=url, payload=payload, fetcher=self._do_req)
 
     def ping(self):
         """Ensures the homepage is reachable."""
@@ -207,14 +205,10 @@ class Instance(object):
 
 def _instances() -> Tuple[Instance, Instance]:
     """Initializes the client for the two test instances."""
-    instance1 = Instance(
-        "instance1", "http://localhost:5006", "http://instance1_web_1:5005"
-    )
+    instance1 = Instance("instance1", "http://docker:5006", "http://instance1_web:5005")
     instance1.ping()
 
-    instance2 = Instance(
-        "instance2", "http://localhost:5007", "http://instance2_web_1:5005"
-    )
+    instance2 = Instance("instance2", "http://docker:5007", "http://instance2_web:5005")
     instance2.ping()
 
     # Return the DB

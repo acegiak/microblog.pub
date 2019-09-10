@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% import 'utils.html' as utils %}
 {% block title %}Login - {{ config.NAME }}{% endblock %}
-{% block headers %}
+{% block header %}
 <style>
 #login-container {
 height: 90%;
@@ -21,10 +21,9 @@ display:inline;
 	<input type="password" name="pass" placeholder="password">
 	{% if u2f_enabled %}
 	<input type="hidden" name="resp" id="sig-payload" value="">
-	<input type="submit" value="waiting for u2f" disabled>
 	{% else %}
-	<input type="submit" value="login">
 	{% endif %}
+	<input type="submit" value="login">
 </form>
 
 </div>

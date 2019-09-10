@@ -40,10 +40,11 @@ a:hover {
 .lcolor {
   color: $color-light;
 }
-.older-link, .newer-linker, .older-link:hover, .newer-link:hover {
+.older-link, .newer-link, .older-link:hover, .newer-link:hover {
   text-decoration: none;
   padding: 3px;
 }
+.older-link { float: left }
 .newer-link { float: right }
 .clear { clear: both; }
 .remote-follow-button {
@@ -88,7 +89,7 @@ a:hover {
   }
 }
 }
-#header {
+header#header {
   margin-bottom: 70px;
 
   .title {
@@ -210,9 +211,10 @@ a:hover {
   .note-wrapper {
     flex: 1;
     padding-left: 15px;
+    overflow: hidden;
   }
 
-  .bottom-bar { margin-top:10px; }
+  .bottom-bar { margin-top:10px;display:inline-block; }
 
   .img-attachment {
     max-width:100%;
@@ -242,10 +244,22 @@ a:hover {
   background: $color-menu-background;
   padding: 5px;
   color: $color-light;
-  margin-right:5px;
+  margin-right:10px;
   border-radius:2px;
+  float: left;
 }
 .bar-item-no-hover:hover {
+  cursor: default;
+}
+.bar-item-no-bg {
+  cursor: default;
+  padding: 5px;
+  color: $color-light;
+  margin-right:10px;
+  border-radius:2px;
+  float: left;
+}
+.bar-item-no-bg:hover {
   cursor: default;
 }
 .bar-item-pinned {
@@ -263,13 +277,39 @@ a:hover {
   background: $color-menu-background;
   padding: 5px;
   color: $color-light;
-  margin-right:5px;
+  margin-right: 10px;
+  float: left;
   border-radius:2px;
 }
 .bar-item:hover {
   background: $primary-color;
   color: $background-color;
+  text-decoration: none;
 }
+.bar-item-no-border {
+  color: $color-light;
+  background: inherit;
+  cursor: default;
+}
+.bar-item-no-border:hover {
+  color: $color-light;
+  background: inherit;
+  cursor: default;
+}
+.bar-item-reverse {
+  background: $primary-color;
+  color: $background-color;
+  padding: 5px;
+  margin-right: 10px;
+  float: left;
+  border-radius:2px;
+  border: 0;
+}
+.bar-item-reverse:hover {
+  background: $color-menu-background;
+  color: $color-light;
+}
+
 button.bar-item {
   border: 0
 }
@@ -310,12 +350,36 @@ form.action-form {
 #admin {
   margin-top: 50px;
 }
-textarea, input {
+.tabbar {
+    margin-bottom:50px;
+}
+.tab {
+  padding: 10px;
+  text-decoration: none;
+}
+.tab.selected {
+  background: $color-menu-background;
+  color: $primary-color;
+  border-top: 1px solid $primary-color;
+  border-right: 1px solid $primary-color;
+  border-left: 1px solid $primary-color;
+  padding: 9px;
+  
+}
+.tab:hover {
+  text-decoration: none;
+  background: $color-menu-background;
+  color: $color-light;
+}
+textarea, input, select {
   background: $color-menu-background;
   padding: 10px;
   color: $color-light;
   border: 0px;
   border-radius: 2px;
+}
+select {
+    padding: 4px 10px;
 }
 input {
   padding: 10px;
@@ -326,4 +390,26 @@ input[type=submit] {
 }
 .note-video {
   margin: 30px 0 10px 0;
+}
+li.answer {
+  height:30px;
+  margin-bottom:10px;
+  position:relative;
+}
+.answer .answer-bar {
+  position:absolute;
+  height:30px;
+  border-radius:2px;
+}
+.answer .answer-text {
+  position:relative;
+  top:6px;
+  padding-left:10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.answer .answer-text > span {
+   width:70px;
+   display:inline-block;
 }

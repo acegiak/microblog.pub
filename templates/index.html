@@ -7,7 +7,7 @@
 <meta content="{{ config.ID }}" property="og:url" />
 <meta content="{{ config.USERNAME }}" property="og:site_name" />                                         
 <meta content="{{ config.USERNAME }}" property="og:title" />                                             
-<meta content="{{ me.summary | html2plaintext }}" property="og:description" />                                            
+<meta content="{{ me.summary | html2plaintext | trim }}" property="og:description" />                                            
 <meta content="{{ me.icon.url }}" property="og:image" />                                                 
 <meta content="200" property="og:image:width" />    
 <meta content="200" property="og:image:height" />   
@@ -20,7 +20,7 @@
 
 {% include "header.html" %}
 
-<div id="notes">
+<main id="notes">
 	{% for item in pinned %}
     {% if item.meta.pinned %}
     <p style="margin-left:65px;padding-bottom:5px;">
@@ -34,24 +34,26 @@
 	{% for item in outbox_data %}
 
 	{% if item | has_type('Announce') %}
+	{% if "actor" in item.meta %}
         {% set boost_actor = item.meta.actor %}
         {% if session.logged_in %}
-        <div style="margin-left:65px;padding-bottom:5px;margin-bottom:15px;">
-        <span class="bar-item-no-hover"><a style="color:#808080;" href="{{ boost_actor.url | get_url }}">{{ boost_actor.name }}</a> boosted</span>
+        <div style="margin-left:65px;padding-bottom:5px;margin-bottom:15px;display:inline-block">
 <form action="/api/undo" class="action-form"  method="POST">
 <input type="hidden" name="redirect" value="/"/>
 <input type="hidden" name="id" value="{{ item.remote_id }}"/>
 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 <button type="submit" class="bar-item">unboost</button>
 </form>
+        <span class="bar-item-no-hover"><a style="color:#808080;" href="{{ boost_actor.url | get_url }}">{{ boost_actor.name }}</a> boosted</span>
         </div>
         {% else %}
-        <p style="margin-left:65px;padding-bottom:5px;">
+        <p style="margin-left:65px;padding-bottom:5px;display:inline-block;">
         <span class="bar-item-no-hover"><a style="color:#808080;" href="{{ boost_actor.url | get_url }}">{{ boost_actor.name }}</a> boosted</span>
         </p>
         {% endif %}
+	{% endif %}
         {% if item.meta.object %}
-        {{ utils.display_note(item.meta.object, ui=False, meta={'actor': item.meta.object_actor}) }}
+        {{ utils.display_note(item.meta.object, ui=False, meta=item.meta) }}
         {% endif %}
 	{% elif item | has_type('Create') %}
         {{ utils.display_note(item.activity.object, meta=item.meta, no_color=True) }}
@@ -60,7 +62,7 @@
 	{% endfor %}
 
     {{ utils.display_pagination(older_than, newer_than) }}
-    </div>
+    </main>
 
 </div>
 {% endblock %}

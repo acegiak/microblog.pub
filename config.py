@@ -3,20 +3,23 @@ import os
 import subprocess
 from datetime import datetime
 from enum import Enum
+from pathlib import Path
 
-import requests
-import sass
 import yaml
+from bleach import linkify
 from itsdangerous import JSONWebSignatureSerializer
 from little_boxes import strtobool
-from little_boxes.activitypub import DEFAULT_CTX
+from little_boxes.activitypub import CTX_AS as AP_DEFAULT_CTX
 from pymongo import MongoClient
-import pymongo
 
+import sass
+from utils.emojis import _load_emojis
 from utils.key import KEY_DIR
 from utils.key import get_key
 from utils.key import get_secret_key
 from utils.media import MediaCache
+
+ROOT_DIR = Path(__file__).parent.absolute()
 
 
 class ThemeStyle(Enum):
@@ -32,18 +35,15 @@ DEFAULT_THEME_PRIMARY_COLOR = {
 }
 
 
-def noop():
-    pass
-
-
-CUSTOM_CACHE_HOOKS = False
-try:
-    from cache_hooks import purge as custom_cache_purge_hook
-except ModuleNotFoundError:
-    custom_cache_purge_hook = noop
-
 VERSION = (
     subprocess.check_output(["git", "describe", "--always"]).split()[0].decode("utf-8")
+)
+VERSION_DATE = (
+    subprocess.check_output(["git", "show", VERSION])
+    .decode()
+    .splitlines()[2]
+    .split("Date:")[-1]
+    .strip()
 )
 
 DEBUG_MODE = strtobool(os.getenv("MICROBLOGPUB_DEBUG", "false"))
@@ -68,8 +68,8 @@ with open(os.path.join(KEY_DIR, "me.yml")) as f:
     SUMMARY = conf["summary"]
     ICON_URL = conf["icon_url"]
     PASS = conf["pass"]
-    EXTRA_INBOXES = conf.get("extra_inboxes", [])
 
+    PROFILE_METADATA = conf.get("profile_metadata", {})
     HIDE_FOLLOWING = conf.get("hide_following", True)
 
     # Theme-related config
@@ -77,6 +77,12 @@ with open(os.path.join(KEY_DIR, "me.yml")) as f:
     THEME_STYLE = ThemeStyle(theme_conf.get("style", DEFAULT_THEME_STYLE))
     THEME_COLOR = theme_conf.get("color", DEFAULT_THEME_PRIMARY_COLOR[THEME_STYLE])
 
+
+DEFAULT_CTX = [
+    AP_DEFAULT_CTX,
+    f"{BASE_URL}/microblogpub-0.1.jsonld",
+    {"@language": "und"},
+]
 
 SASS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sass")
 theme_css = f"$primary-color: {THEME_COLOR};\n"
@@ -88,9 +94,7 @@ with open(os.path.join(SASS_DIR, "base_theme.scss")) as f:
     CSS = sass.compile(string=raw_css, output_style="compressed")
 
 
-USER_AGENT = (
-    f"{requests.utils.default_user_agent()} (microblog.pub/{VERSION}; +{BASE_URL})"
-)
+USER_AGENT = f"microblog.pub/{VERSION}; +{BASE_URL}"
 
 mongo_client = MongoClient(
     host=[os.getenv("MICROBLOGPUB_MONGODB_HOST", "localhost:27017")]
@@ -102,45 +106,6 @@ GRIDFS = mongo_client[f"{DB_NAME}_gridfs"]
 MEDIA_CACHE = MediaCache(GRIDFS, USER_AGENT)
 
 
-def create_indexes():
-    DB.activities.create_index([("remote_id", pymongo.ASCENDING)])
-    DB.activities.create_index([("activity.object.id", pymongo.ASCENDING)])
-    DB.activities.create_index([
-        ("activity.object.id", pymongo.ASCENDING),
-        ("meta.deleted", pymongo.ASCENDING),
-    ])
-    DB.cache2.create_index([("path", pymongo.ASCENDING), ("type", pymongo.ASCENDING), ("arg", pymongo.ASCENDING)])
-    DB.cache2.create_index("date", expireAfterSeconds=3600*12)
-
-    # Index for the block query
-    DB.activities.create_index(
-        [
-            ("box", pymongo.ASCENDING),
-            ("type", pymongo.ASCENDING),
-            ("meta.undo", pymongo.ASCENDING),
-        ]
-    )
-
-    # Index for count queries
-    DB.activities.create_index(
-        [
-            ("box", pymongo.ASCENDING),
-            ("type", pymongo.ASCENDING),
-            ("meta.undo", pymongo.ASCENDING),
-            ("meta.deleted", pymongo.ASCENDING),
-        ]
-    )
-
-    DB.activities.create_index(
-        [
-            ("type", pymongo.ASCENDING),
-            ("activity.object.type", pymongo.ASCENDING),
-            ("activity.object.inReplyTo", pymongo.ASCENDING),
-            ("meta.deleted", pymongo.ASCENDING),
-        ]
-    )
-
-
 def _drop_db():
     if not DEBUG_MODE:
         return
@@ -148,7 +113,7 @@ def _drop_db():
     mongo_client.drop_database(DB_NAME)
 
 
-KEY = get_key(ID, USERNAME, DOMAIN)
+KEY = get_key(ID, ID + "#main-key", USERNAME, DOMAIN)
 
 
 JWT_SECRET = get_secret_key("jwt")
@@ -165,6 +130,13 @@ def _admin_jwt_token() -> str:
 
 ADMIN_API_KEY = get_secret_key("admin_api_key", _admin_jwt_token)
 
+attachments = []
+if PROFILE_METADATA:
+    for key, value in PROFILE_METADATA.items():
+        attachments.append(
+            {"type": "PropertyValue", "name": key, "value": linkify(value)}
+        )
+
 ME = {
     "@context": DEFAULT_CTX,
     "type": "Person",
@@ -172,7 +144,6 @@ ME = {
     "following": ID + "/following",
     "followers": ID + "/followers",
     "featured": ID + "/featured",
-    "liked": ID + "/liked",
     "inbox": ID + "/inbox",
     "outbox": ID + "/outbox",
     "preferredUsername": USERNAME,
@@ -181,7 +152,7 @@ ME = {
     "endpoints": {},
     "url": ID,
     "manuallyApprovesFollowers": False,
-    "attachment": [],
+    "attachment": attachments,
     "icon": {
         "mediaType": mimetypes.guess_type(ICON_URL)[0],
         "type": "Image",
@@ -189,3 +160,24 @@ ME = {
     },
     "publicKey": KEY.to_dict(),
 }
+
+# Default emojis, space-separated, update `me.yml` to customize emojis
+EMOJIS = "😺 😸 😹 😻 😼 😽 🙀 😿 😾"
+if conf.get("emojis"):
+    EMOJIS = conf["emojis"]
+
+# Emoji template for the FE
+EMOJI_TPL = '<img src="/static/twemoji/{filename}.svg" alt="{raw}" class="emoji">'
+if conf.get("emoji_tpl"):
+    EMOJI_TPL = conf["emoji_tpl"]
+
+# Hosts blacklist
+BLACKLIST = conf.get("blacklist", [])
+
+DISABLE_WEBMENTIONS = conf.get("disable_webmentions", False)
+
+# By default, we keep 14 of inbox data ; outbox is kept forever (along with bookmarked stuff, outbox replies, liked...)
+DAYS_TO_KEEP = int(conf.get("days_to_keep", 14))
+
+# Load custom emojis (stored in static/emojis)
+_load_emojis(ROOT_DIR, BASE_URL)
