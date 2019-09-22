@@ -3,7 +3,6 @@
 {% block title %}{% if request.path == url_for('admin.admin_stream') %}Stream{% elif actor_id %}Profile {{ actor.name }}{% else %}Notifications{% endif %} - {{ config.NAME }}{% endblock %}
 {% block content %}
 <div class="h-feed" id="container">
-{% include "header.html" %}
 <div id="admin">
 
 {% if request.path == url_for('admin.admin_notifications') and unread_notifications_count %}
@@ -127,6 +126,17 @@
 	{% for item in inbox_data %}
 	{% if 'actor' in item.meta %}
 	{% if item | has_type('Create') %}
+    {% if request.path.startswith("/admin/notifications") and not item.meta.reply_acked and item.meta.object_visibility | visibility_is_public %}
+    <div style="margin-left:70px;padding-bottom:5px;margin-bottom:15px;display:inline-block;">
+    <form action="/api/ack_reply" class="action-form"  method="POST">
+    <input type="hidden" name="redirect" value="{{ request.path }}"/>
+    <input type="hidden" name="reply_iri" value="{{ item.meta.object_id }}"/>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    <button type="submit" class="bar-item">ack reply</button>
+    </form>
+    </div>
+	
+    {% endif %}
 	{{ utils.display_note(item.activity.object, ui=True, meta=item.meta) }}
 	{% else %}
 	{% if item | has_type('Announce') %}

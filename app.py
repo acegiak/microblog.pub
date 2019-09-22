@@ -29,6 +29,7 @@ from little_boxes.errors import ActivityGoneError
 from little_boxes.errors import Error
 from little_boxes.httpsig import verify_request
 from little_boxes.webfinger import get_remote_follow_template
+from werkzeug.exceptions import InternalServerError
 
 import blueprints.admin
 import blueprints.indieauth
@@ -212,6 +213,18 @@ def handle_task_error(error):
     response = jsonify({"traceback": error.message, "request_id": g.request_id})
     response.status_code = 500
     return response
+
+
+@app.errorhandler(InternalServerError)
+def handle_500(e):
+    tb = "".join(traceback.format_tb(e.__traceback__))
+    logger.error(f"caught error {e!r}, {tb}")
+    if not session.get("logged_in", False):
+        tb = None
+
+    return render_template(
+        "error.html", code=500, status_text="Internal Server Error", tb=tb
+    )
 
 
 # @app.errorhandler(Exception)
@@ -814,7 +827,30 @@ def inbox():
 
         # We fetched the remote data successfully
         data = remote_data
-    activity = ap.parse_activity(data)
+    try:
+        activity = ap.parse_activity(data)
+    except ValueError:
+        logger.exception("failed to parse activity for req {g.request_id}: {data!r}")
+
+        # Track/store the payload for analysis
+        ip, geoip = _get_ip()
+
+        DB.trash.insert(
+            {
+                "activity": data,
+                "meta": {
+                    "ts": datetime.now().timestamp(),
+                    "ip_address": ip,
+                    "geoip": geoip,
+                    "tb": traceback.format_exc(),
+                    "headers": dict(request.headers),
+                    "request_id": g.request_id,
+                },
+            }
+        )
+
+        return Response(status=201)
+
     logger.debug(f"inbox activity={g.request_id}/{activity}/{data}")
 
     post_to_inbox(activity)
