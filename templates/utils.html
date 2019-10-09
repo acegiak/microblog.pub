@@ -26,7 +26,7 @@
 {% endif %}
 {%- endmacro %}
 
-{% macro display_note(obj, perma=False, ui=False, likes=[], shares=[], meta={}, no_color=False) -%}
+{% macro display_note(obj, perma=False, likes=[], shares=[], meta={}, no_color=False) -%}
 
 {% if meta.object_actor %}
     {% set actor = meta.object_actor %}
@@ -68,12 +68,10 @@
         <strong>{{ (actor.name or actor.preferredUsername) | clean | replace_custom_emojis(actor) | safe }}</strong>
         <span class="l">@{% if not no_color and obj.id | is_from_outbox %}<span class="pcolor">{{ actor.preferredUsername | clean | replace_custom_emojis(actor) | safe }}</span>{% else %}{{ actor.preferredUsername | clean | replace_custom_emojis(actor) | safe }}{% endif %}@{% if not no_color and obj.id | is_from_outbox %}<span class="pcolor">{{ actor | url_or_id | get_url | domain }}</span>{% else %}{{ actor | url_or_id | get_url | domain }}{% endif %}</span></a>
 
-	{% if not perma %}
 	<span style="float:right;width: 25%;text-align: right;overflow: hidden;white-space: nowrap;text-overflow: ellipsis;display: block;">
 		<a rel="noopener" class="u-url u-uid note-permalink l" href="{{ obj | url_or_id | get_url }}">
             <time class="dt-published" title="{{ obj.published }}" datetime="{{ obj.published }}" {% if obj | url_or_id | get_url | is_from_outbox %}{%else%}rel="external noreferrer"{%endif%}>{{ obj.published | format_timeago }}</time></a>
 	</span>
-	{% endif %}
     </aside>
 
 {% if meta.in_reply_to_actor %}
@@ -228,10 +226,12 @@
 {% for og in meta.og_metadata %}
 {% if og.url %}
 <a href="{{ og.url }}" class="og-link" style="margin:30px 0;clear:both;display: flex;">
-<div>
+{% if og.image | get_og_image_url %}
+<div style="padding:0 20px 0 0;">
 <img  style="width:100px;border-radius:3px;" src="{{ og.image | get_og_image_url }}">
 </div>
-<div style="padding:0 20px;">
+{% endif %}
+<div>
 <strong>{{ og.title }}</strong>
 <p>{{ og.description | truncate(80) }}</p>
 <small>{{ og.site_name }}</small>
@@ -245,21 +245,15 @@
 
 
 <aside class="bottom-bar">
-{% if perma %}
-<time class="perma-item dt-published" style="float:left;padding:5px;" title="{{ obj.published }}" datetime="{{ obj.published }}" {% if obj | url_or_id | get_url | is_from_outbox %}{%else%}rel="external noreferrer"{%endif%}>{{ obj.published | format_timeago }}</time></a>
-
-{% endif %}
-
-{% if meta.count_reply and obj.id | is_from_outbox %}<a class ="bar-item" href="{{ obj.url | get_url }}"><strong>{{ meta.count_reply }}</strong> replie{% if meta.count_reply > 1 %}s{% endif %}</a>
+{% if meta.count_reply and obj.id | is_from_outbox %}<a class ="bar-item" href="{{ obj.url | get_url }}"><strong>{{ meta.count_reply }}</strong> repl{% if meta.count_reply > 1 %}ies{% else %}y{% endif %}</a>
 {% elif meta.count_reply and session.logged_in %}
-<a class="bar-item" href="/admin/thread?oid={{aid}}"><strong>{{ meta.count_reply }}</strong> replie{% if meta.count_reply > 1 %}s{% endif %}</a>{% endif %}
+<a class="bar-item" href="/admin/thread?oid={{aid}}"><strong>{{ meta.count_reply }}</strong> repl{% if meta.count_reply > 1 %}ies{% else %}y{% endif %}</a>{% endif %}
 
 
 {% if not perma and meta.count_boost and obj.id | is_from_outbox %}<a class ="bar-item" href="{{ obj.url | get_url }}"><strong>{{ meta.count_boost }}</strong> boost{% if meta.count_boost > 1 %}s{% endif %}</a>{% endif %}
 {% if not perma and meta.count_like and obj.id | is_from_outbox %}<a class ="bar-item" href="{{ obj.url | get_url }}"><strong>{{ meta.count_like }}</strong> like{% if meta.count_like > 1 %}s{% endif %}</a>{% endif %}
 
 {% if session.logged_in %}
-{% if ui%}
 <a class="bar-item" href="/admin/new?reply={{ aid }}">reply</a>
 
 {% if meta | get_visibility | visibility_is_public %}
@@ -314,7 +308,6 @@
 {% endif %}
 
 
-{% endif %}
 
 {% if obj.id | is_from_outbox %}
 <form action="/api/note/delete" class="action-form"  method="POST">
@@ -339,9 +332,7 @@
 </form>
 {% endif %}
 
-{% else %}
 {% endif %}
-
 {% endif %}
 
 {% if session.logged_in and obj.inReplyTo and not meta.count_reply and not perma %}
@@ -394,9 +385,9 @@
 {% macro display_thread(thread, likes=[], shares=[]) -%}
 {% for reply in thread %}
 {% if reply._requested %}
-{{ display_note(reply.activity.object, perma=True, ui=False, likes=likes, shares=shares, meta=reply.meta) }}
+{{ display_note(reply.activity.object, perma=True, likes=likes, shares=shares, meta=reply.meta) }}
 {% else %}
-{{ display_note(reply.activity.object, perma=False, ui=True, meta=reply.meta) }}
+{{ display_note(reply.activity.object, perma=False, meta=reply.meta) }}
 {% endif %}
 {% endfor %}
 {% endmacro -%}
@@ -404,10 +395,10 @@
 {% macro display_pagination(older_than, newer_than) -%}
 <div class="clear">
     {% if older_than %}
-    <a href="{{ config.BASE_URL }}{{ request.path }}?older_than={{older_than}}{% if request.args.get('limit') %}&limit={{request.args.get('limit')}}{% endif %}" rel="next" class="older-link lcolor"><span class="pcolor">🡨</span> Older</a>
+    <a href="{{ config.BASE_URL }}{{ request.path }}?older_than={{older_than}}{% if request.args.get('limit') %}&limit={{request.args.get('limit')}}{% endif %}{% if request.args.get('actor_id') %}&actor_id={{request.args.get('actor_id')}}{% endif %}" rel="next" class="older-link lcolor"><span class="pcolor">🡨</span> Older</a>
     {% endif %}
     {% if newer_than %}
-    <a href="{{ config.BASE_URL }}{{ request.path }}?newer_than={{newer_than}}{% if request.args.get('limit') %}&limit={{request.args.get('limit')}}{% endif %}" rel="prev" class="newer-link lcolor">Newer <span class="pcolor">🡪</span></a>
+    <a href="{{ config.BASE_URL }}{{ request.path }}?newer_than={{newer_than}}{% if request.args.get('limit') %}&limit={{request.args.get('limit')}}{% endif %}{% if request.args.get('actor_id') %}&actor_id={{request.args.get('actor_id')}}{% endif %}" rel="prev" class="newer-link lcolor">Newer <span class="pcolor">🡪</span></a>
     {% endif %}
 </div>
 {% endmacro -%}
