@@ -25,13 +25,14 @@ ROOT_DIR = Path(__file__).parent.absolute()
 class ThemeStyle(Enum):
     LIGHT = "light"
     DARK = "dark"
+    CRIMSONFAE = 'crimsonfae'
 
 
-DEFAULT_THEME_STYLE = ThemeStyle.LIGHT.value
+DEFAULT_THEME_STYLE = ThemeStyle.DARK.value
 
 DEFAULT_THEME_PRIMARY_COLOR = {
     ThemeStyle.LIGHT: "#1d781d",  # Green
-    ThemeStyle.DARK: "#33ff00",  # Purple
+    ThemeStyle.DARK: "#33ff00o",  # Purple
 }
 
 
@@ -177,7 +178,7 @@ BLACKLIST = conf.get("blacklist", [])
 DISABLE_WEBMENTIONS = conf.get("disable_webmentions", False)
 
 # By default, we keep 14 of inbox data ; outbox is kept forever (along with bookmarked stuff, outbox replies, liked...)
-DAYS_TO_KEEP = int(conf.get("days_to_keep", 14))
+DAYS_TO_KEEP = int(conf.get("days_to_keep", 32))
 
 # Load custom emojis (stored in static/emojis)
 _load_emojis(ROOT_DIR, BASE_URL)
