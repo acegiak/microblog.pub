@@ -15,6 +15,8 @@
 
 **Still in early development/I do not recommend to run an instance yet.**
 
+<!-- start -->
+
 ## Features
 
  - Implements a basic [ActivityPub](https://activitypub.rocks/) server (with federation)
@@ -28,7 +30,7 @@
    - Private "bookmark" support
    - List support
    - Allows you to attach files to your notes
-   - Custom emojos
+   - Custom emojis support
  - Cares about your privacy
    - The image upload endpoint strips EXIF meta data before storing the file
    - Every attachment/media is cached (or proxied) by the server
@@ -40,6 +42,7 @@
  - IndieWeb citizen
    - Microformats aware (exports `h-feed`, `h-entry`, `h-cards`, ...)
      - Export a feed in the HTML that is WebSub compatible
+   - Partial [Micropub](https://www.w3.org/TR/micropub/) support ([implementation report](https://micropub.rocks/implementation-reports/servers/416/s0BDEXZiX805btoa47sz))
    - Implements [IndieAuth](https://indieauth.spec.indieweb.org/) endpoints (authorization and token endpoint)
      - You can use your ActivityPub identity to login to other websites/app (with U2F support)
    - Send [Webmentions](https://www.w3.org/TR/webmention/) to linked website (only for public notes)
@@ -88,12 +91,6 @@ By default, the server will listen on `localhost:5005` (http://localhost:5005 sh
 
 For production, you need to setup a reverse proxy (nginx, caddy) to forward your domain to the local server 
 (and check [certbot](https://certbot.eff.org/) for getting a free TLS certificate).
-
-
-### HTTP API
-
-See [docs/api.md](docs/api.md) for the internal HTTP API documentation.
-
 
 ### Backup
 

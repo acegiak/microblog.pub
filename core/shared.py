@@ -145,9 +145,10 @@ def _build_thread(data, include_children=True, query=None):  # noqa: C901
         query = {}
     data["_requested"] = True
     app.logger.info(f"_build_thread({data!r})")
-    root_id = data["meta"].get(
-        MetaKey.THREAD_ROOT_PARENT.value,
-        data["meta"].get(MetaKey.OBJECT_ID.value, data["meta"].get("remote_id")),
+    root_id = (
+        data["meta"].get(MetaKey.THREAD_ROOT_PARENT.value)
+        or data["meta"].get(MetaKey.OBJECT_ID.value)
+        or data["remote_id"]
     )
 
     replies = [data]

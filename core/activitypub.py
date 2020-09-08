@@ -78,6 +78,24 @@ def _answer_key(choice: str) -> str:
     return h.hexdigest()
 
 
+def _actor_url(actor: ap.ActivityType) -> str:
+    if isinstance(actor.url, dict):
+        if actor.url.get("type") == ap.ActivityType.LINK.value:
+            return actor.url["href"]
+
+        raise ValueError(f"unkown actor url object type: {actor.url!r}")
+
+    elif isinstance(actor.url, str):
+        return actor.url
+
+    # Return the actor ID if we cannot get the URL
+    elif isinstance(actor.id, str):
+        return actor.id
+
+    else:
+        raise ValueError(f"invalid actor URL: {actor.url!r}")
+
+
 def _actor_hash(actor: ap.ActivityType, local: bool = False) -> str:
     """Used to know when to update the meta actor cache, like an "actor version"."""
     h = hashlib.new("sha1")
@@ -85,7 +103,7 @@ def _actor_hash(actor: ap.ActivityType, local: bool = False) -> str:
     h.update((actor.name or "").encode())
     h.update((actor.preferredUsername or "").encode())
     h.update((actor.summary or "").encode())
-    h.update((actor.url or "").encode())
+    h.update(_actor_url(actor).encode())
     key = actor.get_key()
     h.update(key.pubkey_pem.encode())
     h.update(key.key_id().encode())
@@ -113,8 +131,7 @@ def _is_local_reply(create: ap.Create) -> bool:
     return False
 
 
-def save(box: Box, activity: ap.BaseActivity) -> None:
-    """Custom helper for saving an activity to the DB."""
+def _meta(activity: ap.BaseActivity) -> _NewMeta:
     visibility = ap.get_visibility(activity)
     is_public = False
     if visibility in [ap.Visibility.PUBLIC, ap.Visibility.UNLISTED]:
@@ -134,10 +151,26 @@ def save(box: Box, activity: ap.BaseActivity) -> None:
 
     actor_id = activity.get_actor().id
 
+    return {
+        MetaKey.UNDO.value: False,
+        MetaKey.DELETED.value: False,
+        MetaKey.PUBLIC.value: is_public,
+        MetaKey.SERVER.value: urlparse(activity.id).netloc,
+        MetaKey.VISIBILITY.value: visibility.name,
+        MetaKey.ACTOR_ID.value: actor_id,
+        MetaKey.OBJECT_ID.value: object_id,
+        MetaKey.OBJECT_VISIBILITY.value: object_visibility,
+        MetaKey.POLL_ANSWER.value: False,
+        MetaKey.PUBLISHED.value: activity.published if activity.published else now(),
+    }
+
+
+def save(box: Box, activity: ap.BaseActivity) -> None:
+    """Custom helper for saving an activity to the DB."""
     # Set some "type"-related neta
-    extra: Dict[str, Any] = {}
+    meta = _meta(activity)
     if box == Box.OUTBOX and activity.has_type(ap.ActivityType.FOLLOW):
-        extra[MetaKey.FOLLOW_STATUS.value] = FollowStatus.WAITING.value
+        meta[MetaKey.FOLLOW_STATUS.value] = FollowStatus.WAITING.value
     elif activity.has_type(ap.ActivityType.CREATE):
         mentions = []
         obj = activity.get_object()
@@ -146,7 +179,7 @@ def save(box: Box, activity: ap.BaseActivity) -> None:
         hashtags = []
         for h in obj.get_hashtags():
             hashtags.append(h.name[1:])  # Strip the #
-        extra.update(
+        meta.update(
             {MetaKey.MENTIONS.value: mentions, MetaKey.HASHTAGS.value: hashtags}
         )
 
@@ -156,21 +189,7 @@ def save(box: Box, activity: ap.BaseActivity) -> None:
             "activity": activity.to_dict(),
             "type": _to_list(activity.type),
             "remote_id": activity.id,
-            "meta": {
-                MetaKey.UNDO.value: False,
-                MetaKey.DELETED.value: False,
-                MetaKey.PUBLIC.value: is_public,
-                MetaKey.SERVER.value: urlparse(activity.id).netloc,
-                MetaKey.VISIBILITY.value: visibility.name,
-                MetaKey.ACTOR_ID.value: actor_id,
-                MetaKey.OBJECT_ID.value: object_id,
-                MetaKey.OBJECT_VISIBILITY.value: object_visibility,
-                MetaKey.POLL_ANSWER.value: False,
-                MetaKey.PUBLISHED.value: activity.published
-                if activity.published
-                else now(),
-                **extra,
-            },
+            "meta": meta,
         }
     )
 
@@ -308,9 +327,10 @@ def post_to_outbox(activity: ap.BaseActivity) -> str:
         activity._data["object"]["id"] = urljoin(
             BASE_URL, url_for("outbox_activity", item_id=obj_id)
         )
-        activity._data["object"]["url"] = urljoin(
-            BASE_URL, url_for("note_by_id", note_id=obj_id)
-        )
+        if "url" not in activity._data["object"]:
+            activity._data["object"]["url"] = urljoin(
+                BASE_URL, url_for("note_by_id", note_id=obj_id)
+            )
         activity.reset_object_cache()
 
     save(Box.OUTBOX, activity)
@@ -824,3 +844,24 @@ def handle_replies(create: ap.Create) -> None:
 
     # Spawn a task to process it (and determine if it needs to be saved)
     Tasks.process_reply(create.get_object_id())
+
+
+def accept_follow(activity: ap.BaseActivity) -> str:
+    actor_id = activity.get_actor().id
+    accept = ap.Accept(
+        actor=ID,
+        context=new_context(activity),
+        object={
+            "type": "Follow",
+            "id": activity.id,
+            "object": activity.get_object_id(),
+            "actor": actor_id,
+        },
+        to=[actor_id],
+        published=now(),
+    )
+    update_one_activity(
+        by_remote_id(activity.id),
+        upsert({MetaKey.FOLLOW_STATUS: FollowStatus.ACCEPTED.value}),
+    )
+    return post_to_outbox(accept)

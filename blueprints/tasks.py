@@ -7,6 +7,7 @@ from typing import Dict
 
 import flask
 import requests
+from bs4 import BeautifulSoup
 from flask import current_app as app
 from little_boxes import activitypub as ap
 from little_boxes.activitypub import _to_list
@@ -92,7 +93,7 @@ def task_update_question() -> _Response:
 
     except HTTPError as err:
         app.logger.exception("request failed")
-        if 400 >= err.response.status_code >= 499:
+        if 400 <= err.response.status_code <= 499:
             app.logger.info("client error, no retry")
             return ""
 
@@ -271,7 +272,9 @@ def select_video_to_cache(links):
     return videos[0]
 
 
-@blueprint.route("/task/cache_attachments", methods=["POST"])
+@blueprint.route(
+    "/task/cache_attachments", methods=["POST"]
+)  # noqa: C910  # too complex
 def task_cache_attachments() -> _Response:
     task = p.parse(flask.request)
     app.logger.info(f"task={task!r}")
@@ -285,6 +288,13 @@ def task_cache_attachments() -> _Response:
             obj = activity.get_object()
         else:
             obj = activity
+
+        if obj.content:
+            content_html = BeautifulSoup(obj.content, "html5lib")
+            for img in content_html.find_all("img"):
+                src = img.attrs.get("src")
+                if src:
+                    Tasks.cache_attachment({"url": src}, iri)
 
         if obj.has_type(ap.ActivityType.VIDEO):
             if isinstance(obj.url, list):
@@ -354,7 +364,7 @@ def task_send_webmention() -> _Response:
         resp.raise_for_status()
     except HTTPError as err:
         app.logger.exception("request failed")
-        if 400 >= err.response.status_code >= 499:
+        if 400 <= err.response.status_code <= 499:
             app.logger.info("client error, no retry")
             return ""
 
@@ -366,7 +376,7 @@ def task_send_webmention() -> _Response:
     return ""
 
 
-@blueprint.route("/task/cache_actor", methods=["POST"])
+@blueprint.route("/task/cache_actor", methods=["POST"])  # noqa: C910  # too complex
 def task_cache_actor() -> _Response:
     task = p.parse(flask.request)
     app.logger.info(f"task={task!r}")
@@ -381,16 +391,19 @@ def task_cache_actor() -> _Response:
         # Fetch the Open Grah metadata if it's a `Create`
         if activity.has_type(ap.ActivityType.CREATE):
             obj = activity.get_object()
-            links = opengraph.links_from_note(obj.to_dict())
-            if links:
-                Tasks.fetch_og_meta(iri)
+            try:
+                links = opengraph.links_from_note(obj.to_dict())
+                if links:
+                    Tasks.fetch_og_meta(iri)
 
-                # Send Webmentions only if it's from the outbox, and public
-                if (
-                    is_from_outbox(obj)
-                    and ap.get_visibility(obj) == ap.Visibility.PUBLIC
-                ):
-                    Tasks.send_webmentions(activity, links)
+                    # Send Webmentions only if it's from the outbox, and public
+                    if (
+                        is_from_outbox(obj)
+                        and ap.get_visibility(obj) == ap.Visibility.PUBLIC
+                    ):
+                        Tasks.send_webmentions(activity, links)
+            except Exception:
+                app.logger.exception("failed to cache links")
 
         if activity.has_type(ap.ActivityType.FOLLOW):
             if actor.id == config.ID:
@@ -504,7 +517,7 @@ def task_post_to_remote_inbox() -> _Response:
         track_failed_send(to)
 
         app.logger.exception("request failed")
-        if 400 >= err.response.status_code >= 499:
+        if 400 <= err.response.status_code <= 499:
             app.logger.info("client error, no retry")
             return ""
 
@@ -538,7 +551,12 @@ def task_fetch_remote_question() -> _Response:
                 "activity.object.id": iri,
             }
         )
-        remote_question = ap.get_backend().fetch_iri(iri, no_cache=True)
+        try:
+            remote_question = ap.get_backend().fetch_iri(iri, no_cache=True)
+        except (ActivityGoneError, ActivityNotFoundError):
+            app.logger.info("f{iri} not found, no retry")
+            return ""
+
         # FIXME(tsileo): compute and set `meta.object_visiblity` (also update utils.py to do it)
         if (
             local_question
@@ -571,7 +589,7 @@ def task_fetch_remote_question() -> _Response:
 
     except HTTPError as err:
         app.logger.exception("request failed")
-        if 400 >= err.response.status_code >= 499:
+        if 400 <= err.response.status_code <= 499:
             app.logger.info("client error, no retry")
             return ""
 

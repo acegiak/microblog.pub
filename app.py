@@ -4,7 +4,6 @@ import os
 import traceback
 from datetime import datetime
 from typing import Any
-from urllib.parse import urlparse
 from uuid import uuid4
 
 import requests
@@ -94,6 +93,9 @@ app.register_blueprint(blueprints.indieauth.blueprint)
 app.register_blueprint(blueprints.tasks.blueprint)
 app.register_blueprint(blueprints.well_known.blueprint)
 app.config.update(WTF_CSRF_CHECK_DEFAULT=False)
+
+app.config.update(SESSION_COOKIE_SECURE=True if config.SCHEME == "https" else False)
+
 csrf.init_app(app)
 
 logger = logging.getLogger(__name__)
@@ -289,7 +291,7 @@ def proxy(scheme: str, url: str) -> Any:
         if k.lower() not in ["host", "cookie", "", "x-forwarded-for", "x-real-ip"]
         and not k.lower().startswith("broxy-")
     }
-    req_headers["Host"] = urlparse(url).netloc
+    # req_headers["Host"] = urlparse(url).netloc
     resp = requests.get(url, stream=True, headers=req_headers)
     app.logger.info(f"proxied req {url} {req_headers}: {resp!r}")
 

@@ -1,9 +1,11 @@
+import logging
 import mimetypes
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
 from functools import wraps
 from io import BytesIO
+from shutil import copyfileobj
 from typing import Any
 from typing import List
 
@@ -31,6 +33,7 @@ from config import JWT
 from config import MEDIA_CACHE
 from config import _drop_db
 from core import feed
+from core.activitypub import accept_follow
 from core.activitypub import activity_url
 from core.activitypub import new_context
 from core.activitypub import post_to_outbox
@@ -48,6 +51,8 @@ from core.shared import login_required
 from core.tasks import Tasks
 from utils import emojis
 from utils import now
+
+_logger = logging.getLogger(__name__)
 
 blueprint = flask.Blueprint("api", __name__)
 
@@ -76,6 +81,7 @@ def _api_required() -> None:
 
     # Will raise a BadSignature on bad auth
     payload = JWT.loads(token)
+    flask.g.jwt_payload = payload
     app.logger.info(f"api call by {payload}")
 
 
@@ -353,6 +359,24 @@ def api_undo() -> _Response:
     return _user_api_response(activity=undo_id)
 
 
+@blueprint.route("/accept_follow", methods=["POST"])
+@api_required
+def api_accept_follow() -> _Response:
+    oid = _user_api_arg("id")
+    doc = DB.activities.find_one({"box": Box.INBOX.value, "remote_id": oid})
+    print(doc)
+    if not doc:
+        raise ActivityNotFoundError(f"cannot found {oid}")
+
+    obj = ap.parse_activity(doc.get("activity"))
+    if not obj.has_type(ap.ActivityType.FOLLOW):
+        raise ValueError(f"{obj} is not a Follow activity")
+
+    accept_id = accept_follow(obj)
+
+    return _user_api_response(activity=accept_id)
+
+
 @blueprint.route("/new_list", methods=["POST"])
 @api_required
 def api_new_list() -> _Response:
@@ -419,13 +443,86 @@ def api_remove_from_list() -> _Response:
     return _user_api_response()
 
 
-@blueprint.route("/new_note", methods=["POST"])
+@blueprint.route("/new_note", methods=["POST", "GET"])  # noqa: C901 too complex
 @api_required
 def api_new_note() -> _Response:
-    source = _user_api_arg("content")
+    # Basic Micropub (https://www.w3.org/TR/micropub/) query configuration support
+    if request.method == "GET" and request.args.get("q") == "config":
+        return jsonify({})
+    elif request.method == "GET":
+        abort(405)
+
+    source = None
+    summary = None
+    location = None
+
+    # Basic Micropub (https://www.w3.org/TR/micropub/) "create" support
+    is_micropub = False
+    # First, check if the Micropub specific fields are present
+    if (
+        _user_api_arg("h", default=None) == "entry"
+        or _user_api_arg("type", default=[None])[0] == "h-entry"
+    ):
+        is_micropub = True
+        # Ensure the "create" scope is set
+        if "jwt_payload" not in flask.g or "create" not in flask.g.jwt_payload["scope"]:
+            abort(403)
+
+        # Handle location sent via form-data
+        # `geo:28.5,9.0,0.0`
+        location = _user_api_arg("location", default="")
+        if location.startswith("geo:"):
+            slat, slng, *_ = location[4:].split(",")
+            location = {
+                "type": ap.ActivityType.PLACE.value,
+                "latitude": float(slat),
+                "longitude": float(slng),
+            }
+
+        # Handle JSON microformats2 data
+        if _user_api_arg("type", default=None):
+            _logger.info(f"Micropub request: {request.json}")
+            try:
+                source = request.json["properties"]["content"][0]
+            except (ValueError, KeyError):
+                pass
+
+            # Handle HTML
+            if isinstance(source, dict):
+                source = source.get("html")
+
+            try:
+                summary = request.json["properties"]["name"][0]
+            except (ValueError, KeyError):
+                pass
+
+        # Try to parse the name as summary if the payload is POSTed using form-data
+        if summary is None:
+            summary = _user_api_arg("name", default=None)
+
+    # This step will also parse content from Micropub request
+    if source is None:
+        source = _user_api_arg("content", default=None)
+
     if not source:
         raise ValueError("missing content")
 
+    if summary is None:
+        summary = _user_api_arg("summary", default="")
+
+    if not location:
+        if _user_api_arg("location_lat", default=None):
+            lat = float(_user_api_arg("location_lat"))
+            lng = float(_user_api_arg("location_lng"))
+            loc_name = _user_api_arg("location_name", default="")
+            location = {
+                "type": ap.ActivityType.PLACE.value,
+                "name": loc_name,
+                "latitude": lat,
+                "longitude": lng,
+            }
+
+    # All the following fields are specific to the API (i.e. not Micropub related)
     _reply, reply = None, None
     try:
         _reply = _user_api_arg("reply")
@@ -469,9 +566,9 @@ def api_new_note() -> _Response:
 
     raw_note = dict(
         attributedTo=MY_PERSON.id,
-        cc=list(set(cc)),
-        to=list(set(to)),
-        summary=_user_api_arg("summary", default=""),
+        cc=list(set(cc) - set([MY_PERSON.id])),
+        to=list(set(to) - set([MY_PERSON.id])),
+        summary=summary,
         content=content,
         tag=tags,
         source={"mediaType": "text/markdown", "content": source},
@@ -479,26 +576,40 @@ def api_new_note() -> _Response:
         context=context,
     )
 
-    if "file" in request.files and request.files["file"].filename:
-        file = request.files["file"]
-        rfilename = secure_filename(file.filename)
-        with BytesIO() as buf:
-            file.save(buf)
-            oid = MEDIA_CACHE.save_upload(buf, rfilename)
-        mtype = mimetypes.guess_type(rfilename)[0]
+    if location:
+        raw_note["location"] = location
 
-        raw_note["attachment"] = [
-            {
-                "mediaType": mtype,
-                "name": _user_api_arg("file_description", default=rfilename),
-                "type": "Document",
-                "url": f"{BASE_URL}/uploads/{oid}/{rfilename}",
-            }
-        ]
+    if request.files:
+        for f in request.files.keys():
+            if not request.files[f].filename:
+                continue
+
+            file = request.files[f]
+            rfilename = secure_filename(file.filename)
+            with BytesIO() as buf:
+                # bypass file.save(), because it can't save to a file-like object
+                copyfileobj(file.stream, buf, 16384)
+                oid = MEDIA_CACHE.save_upload(buf, rfilename)
+            mtype = mimetypes.guess_type(rfilename)[0]
+
+            raw_note["attachment"] = [
+                {
+                    "mediaType": mtype,
+                    "name": _user_api_arg("file_description", default=rfilename),
+                    "type": "Document",
+                    "url": f"{BASE_URL}/uploads/{oid}/{rfilename}",
+                }
+            ]
 
     note = ap.Note(**raw_note)
     create = note.build_create()
     create_id = post_to_outbox(create)
+
+    # Return a 201 with the note URL in the Location header if this was a Micropub request
+    if is_micropub:
+        resp = flask.Response("", headers={"Location": create_id})
+        resp.status_code = 201
+        return resp
 
     return _user_api_response(activity=create_id)
 
@@ -510,10 +621,25 @@ def api_new_question() -> _Response:
     if not source:
         raise ValueError("missing content")
 
+    visibility = ap.Visibility[
+        _user_api_arg("visibility", default=ap.Visibility.PUBLIC.name)
+    ]
+
     content, tags = parse_markdown(source)
     tags = tags + emojis.tags(content)
 
-    cc = [ID + "/followers"]
+    to: List[str] = []
+    cc: List[str] = []
+
+    if visibility == ap.Visibility.PUBLIC:
+        to = [ap.AS_PUBLIC]
+        cc = [ID + "/followers"]
+    elif visibility == ap.Visibility.UNLISTED:
+        to = [ID + "/followers"]
+        cc = [ap.AS_PUBLIC]
+    elif visibility == ap.Visibility.FOLLOWERS_ONLY:
+        to = [ID + "/followers"]
+        cc = []
 
     for tag in tags:
         if tag["type"] == "Mention":
@@ -547,7 +673,7 @@ def api_new_question() -> _Response:
     raw_question = dict(
         attributedTo=MY_PERSON.id,
         cc=list(set(cc)),
-        to=[ap.AS_PUBLIC],
+        to=list(set(to)),
         context=new_context(),
         content=content,
         tag=tags,

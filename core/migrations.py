@@ -349,3 +349,30 @@ class _20190906_InReplyToMigration(Migration):
                     )
             except Exception:
                 logger.exception(f"failed to process activity {data!r}")
+
+
+class _20191020_ManuallyApprovesFollowerSupportMigrationn(Migration):
+    def migrate(self) -> None:
+        DB.activities.update_many(
+            {
+                **by_type(ap.ActivityType.FOLLOW),
+                **in_inbox(),
+                "meta.follow_status": {"$exists": False},
+            },
+            {"$set": {"meta.follow_status": "accepted"}},
+        )
+
+
+class _20191106_PlaceTagToLocation(Migration):
+    def migrate(self) -> None:
+        for data in find_activities({"activity.object.tag.type": "Place"}):
+            for tag in data["activity"]["object"]["tag"]:
+                if tag["type"] == "Place":
+                    break
+            DB.activities.update_one(
+                {"_id": data["_id"]},
+                {
+                    "$pull": {"activity.object.tag": {"type": "Place"}},
+                    "$set": {"activity.object.location": tag},
+                },
+            )

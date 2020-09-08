@@ -70,6 +70,8 @@ class MetaKey(Enum):
     COUNT_BOOST = "count_boost"
     COUNT_REPLY = "count_reply"
 
+    EMOJI_REACTIONS = "emoji_reactions"
+
 
 def _meta(mk: MetaKey) -> str:
     return f"meta.{mk.value}"
@@ -140,6 +142,10 @@ def is_public() -> _SubQuery:
 
 def by_visibility(vis: ap.Visibility) -> _SubQuery:
     return flag(MetaKey.VISIBILITY, vis.name)
+
+
+def by_object_visibility(vis: ap.Visibility) -> _SubQuery:
+    return flag(MetaKey.OBJECT_VISIBILITY, vis.name)
 
 
 def by_hashtag(ht: str) -> _SubQuery:

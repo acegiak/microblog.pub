@@ -1,4 +1,5 @@
 import json
+from collections import defaultdict
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
@@ -24,13 +25,17 @@ from config import DB
 from config import ID
 from config import PASS
 from core.activitypub import Box
+from core.activitypub import _meta
 from core.activitypub import post_to_outbox
 from core.db import find_one_activity
 from core.meta import by_object_id
+from core.meta import by_object_visibility
 from core.meta import by_remote_id
 from core.meta import by_type
 from core.meta import follow_request_accepted
 from core.meta import in_outbox
+from core.meta import not_deleted
+from core.meta import not_poll_answer
 from core.meta import not_undo
 from core.shared import MY_PERSON
 from core.shared import _build_thread
@@ -89,6 +94,7 @@ def admin_login() -> _Response:
         pwd = request.form.get("pass")
         if pwd:
             if verify_pass(pwd):
+                session.permanent = True
                 session["logged_in"] = True
                 return redirect(
                     request.args.get("redirect") or url_for("admin.admin_notifications")
@@ -107,6 +113,7 @@ def admin_login() -> _Response:
             finally:
                 session["challenge"] = None
 
+            session.permanent = True
             session["logged_in"] = True
             return redirect(
                 request.args.get("redirect") or url_for("admin.admin_notifications")
@@ -190,24 +197,45 @@ def admin_tasks() -> _Response:
 def admin_lookup() -> _Response:
     data = None
     meta = None
+    follower = None
+    following = None
     if request.args.get("url"):
         data = lookup(request.args.get("url"))  # type: ignore
         if data:
-            if data.has_type(ap.ActivityType.ANNOUNCE):
-                meta = dict(
-                    object=data.get_object().to_dict(),
-                    object_actor=data.get_object().get_actor().to_dict(),
-                    actor=data.get_actor().to_dict(),
+            if not data.has_type(ap.ACTOR_TYPES):
+                meta = _meta(data)
+            else:
+                follower = find_one_activity(
+                    {
+                        "box": "inbox",
+                        "type": ap.ActivityType.FOLLOW.value,
+                        "meta.actor_id": data.id,
+                        "meta.undo": False,
+                    }
+                )
+                following = find_one_activity(
+                    {
+                        **by_type(ap.ActivityType.FOLLOW),
+                        **by_object_id(data.id),
+                        **not_undo(),
+                        **in_outbox(),
+                        **follow_request_accepted(),
+                    }
                 )
 
-            elif data.has_type(ap.ActivityType.QUESTION):
+            if data.has_type(ap.ActivityType.QUESTION):
                 p.push(data.id, "/task/fetch_remote_question")
 
         print(data)
         app.logger.debug(data.to_dict())
     return htmlify(
         render_template(
-            "lookup.html", data=data, meta=meta, url=request.args.get("url")
+            "lookup.html",
+            data=data,
+            meta=meta,
+            follower=follower,
+            following=following,
+            url=request.args.get("url"),
         )
     )
 
@@ -223,6 +251,7 @@ def admin_profile() -> _Response:
     q = {
         "meta.actor_id": actor_id,
         "box": "inbox",
+        **not_deleted(),
         "type": {"$in": [ap.ActivityType.CREATE.value, ap.ActivityType.ANNOUNCE.value]},
     }
     inbox_data, older_than, newer_than = paginated_query(
@@ -302,12 +331,10 @@ def admin_new() -> _Response:
         if data:
             reply = ap.parse_activity(data["activity"])
         else:
-            data = dict(
-                meta={},
-                activity=dict(
-                    object=ap.get_backend().fetch_iri(request.args.get("reply"))
-                ),
-            )
+            obj = ap.get_backend().fetch_iri(request.args.get("reply"))
+            data = dict(meta=_meta(ap.parse_activity(obj)), activity=dict(object=obj))
+            data["_id"] = obj["id"]
+            data["remote_id"] = obj["id"]
             reply = ap.parse_activity(data["activity"]["object"])
         # Fetch the post visibility, in case it's follower only
         default_visibility = ap.get_visibility(reply)
@@ -323,6 +350,16 @@ def admin_new() -> _Response:
         domain = urlparse(actor.id).netloc
         # FIXME(tsileo): if reply of reply, fetch all participants
         content = f"@{actor.preferredUsername}@{domain} "
+        if reply.has_type(ap.ActivityType.CREATE):
+            reply = reply.get_object()
+        for mention in reply.get_mentions():
+            if mention.href in [actor.id, ID]:
+                continue
+            m = ap.fetch_remote_activity(mention.href)
+            if m.has_type(ap.ACTOR_TYPES):
+                d = urlparse(m.id).netloc
+                content += f"@{m.preferredUsername}@{d} "
+
         thread = _build_thread(data)
 
     return htmlify(
@@ -340,6 +377,64 @@ def admin_new() -> _Response:
             ),
         )
     )
+
+
+@blueprint.route("/admin/direct_messages", methods=["GET"])
+@login_required
+def admin_direct_messages() -> _Response:
+    all_dms = DB.activities.find(
+        {
+            **not_poll_answer(),
+            **by_type(ap.ActivityType.CREATE),
+            **by_object_visibility(ap.Visibility.DIRECT),
+        }
+    ).sort("meta.published", -1)
+
+    # Group by threads
+    _threads = defaultdict(list)  # type: ignore
+    for dm in all_dms:
+        # Skip poll answers
+        if dm["activity"].get("object", {}).get("name"):
+            continue
+
+        _threads[dm["meta"].get("thread_root_parent", dm["meta"]["object_id"])].append(
+            dm
+        )
+
+    # Now build the data needed for the UI
+    threads = []
+    for thread_root, thread in _threads.items():
+        # We need the list of participants
+        participants = set()
+        for raw_activity in thread:
+            activity = ap.parse_activity(raw_activity["activity"])
+            actor = activity.get_actor()
+            domain = urlparse(actor.id).netloc
+            if actor.id != ID:
+                participants.add(f"@{actor.preferredUsername}@{domain}")
+            if activity.has_type(ap.ActivityType.CREATE):
+                activity = activity.get_object()
+            for mention in activity.get_mentions():
+                if mention.href in [actor.id, ID]:
+                    continue
+                m = ap.fetch_remote_activity(mention.href)
+                if m.has_type(ap.ACTOR_TYPES) and m.id != ID:
+                    d = urlparse(m.id).netloc
+                    participants.add(f"@{m.preferredUsername}@{d}")
+
+            if not participants:
+                continue
+        # Build the UI data for this conversation
+        oid = thread[-1]["meta"]["object_id"]
+        threads.append(
+            {
+                "participants": list(participants),
+                "oid": oid,
+                "last_reply": thread[0],
+                "len": len(thread),
+            }
+        )
+    return htmlify(render_template("direct_messages.html", threads=threads))
 
 
 @blueprint.route("/admin/lists", methods=["GET"])
@@ -486,7 +581,11 @@ def admin_list(name: str) -> _Response:
 
     return htmlify(
         render_template(
-            tpl, inbox_data=inbox_data, older_than=older_than, newer_than=newer_than
+            tpl,
+            inbox_data=inbox_data,
+            older_than=older_than,
+            newer_than=newer_than,
+            list_name=name,
         )
     )
 
@@ -540,6 +639,7 @@ def authorize_follow():
             )
         )
 
+    csrf.protect()
     actor = get_actor_url(request.form.get("profile"))
     if not actor:
         abort(500)

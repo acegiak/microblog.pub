@@ -5,8 +5,10 @@
 <div id="container">
 <div style="margin-top:50px;">
 
+<p>Interact with an ActivityPub object via its URL or look for a user using <i>@user@domain.tld</i></p>
+
 <form id="lookup-form" method="GET">
- <input type="text" name="url" value="{{url or '' }}" placeholder="https://url-of-a-user-or-a-note.tld">
+<input type="text" name="url" value="{{url or '' }}">
 <input type="submit" value="Lookup">
 </form>
 
@@ -15,28 +17,44 @@
 <div id="lookup-result" style="margin-top:30px;">
     {% if data | has_actor_type %}
 <div style="margin-left:95px;padding-bottom:5px;margin-bottom:15px;display:inline-block;">
+{% if following %}
 <a class="bar-item" href="/admin/profile?actor_id={{data.id}}">profile</a>
+<form action="/api/undo" class="action-form"  method="post">
+<input type="hidden" name="redirect" value="{{ request.path }}?url={{request.args.get('url')}}"/>
+<input type="hidden" name="id" value="{{ following.remote_id }}"/>
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+<button type="submit" class="bar-item">unfollow</button>
+</form>
+<form action="/api/block" class="action-form"  method="POST">
+<input type="hidden" name="redirect" value="{{ request.path }}?url={{request.args.get('url')}}"/>
+<input type="hidden" name="actor" value="{{ data.id }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<button type="submit" class="bar-item" onclick="return confirm('Confirm the block action?');">block</button>
+</form>
+{% else %}
 <form action="/api/follow" class="action-form"  method="POST">
 <input type="hidden" name="redirect" value="{{ request.path }}"/>
 <input type="hidden" name="actor" value="{{ data.id }}"/>
 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 <button type="submit" class="bar-item">follow</button>
 </form>
+{% endif %}
+{% if follower %}<span class="bar-item-no-hover">follows you!</span>{% endif %}
         </div>
 
 
     {{ utils.display_actor_inline(data, size=80) }}
 
     {% elif data | has_type('Create') %}
-	{{ utils.display_note(data.object) }}
+	{{ utils.display_note(data.object, meta=meta) }}
     {% elif data | has_type(['Note', 'Article', 'Video', 'Audio', 'Page', 'Question']) %}
-	{{ utils.display_note(data) }}
+	{{ utils.display_note(data, meta=meta) }}
     {% elif data | has_type('Announce') %}
     {% set boost_actor = meta.actor %}
         <p style="margin-left:65px;padding-bottom:5px;">
         <span class="bar-item-no-hover"><a style="color:#808080;" href="{{ boost_actor.url | get_url }}">{{ boost_actor.name }}</a> boosted</span>
         </p>
-        {{ utils.display_note(meta.object) }}
+        {{ utils.display_note(meta.object, meta=meta) }}
  
     {% endif %}
 </div>
