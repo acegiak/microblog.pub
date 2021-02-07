@@ -2,7 +2,7 @@ cachetools
 poussetaches
 python-dateutil
 libsass
-tornado<6.0.0
+tornado
 gunicorn
 piexif
 requests
@@ -25,3 +25,4 @@ pillow
 emoji-unicode
 html5lib
 Pygments
+flask-talisman

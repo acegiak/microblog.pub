@@ -76,7 +76,7 @@ def nodeinfo() -> Any:
         "software": {
             "name": "microblogpub",
             "version": config.VERSION,
-            "repository": "https://github.com/tsileo/microblog.pub",
+            "repository": config.SOURCECODE_URL,
         },
         "protocols": ["activitypub"],
         "services": {"inbound": [], "outbound": []},

@@ -5,6 +5,7 @@ https: true
 summary: 'your summary'
 icon_url: 'https://you-avatar-url'
 pass: '<bcrypt password hash>'
+sourcecode_url: 'https://github.com/tsileo/microblog.pub'
 #favicon_url: '/static/favicon.png'
 #profile_metadata:
 #    name1: 'value'

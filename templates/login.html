@@ -2,7 +2,7 @@
 {% import 'utils.html' as utils %}
 {% block title %}Login - {{ config.NAME }}{% endblock %}
 {% block header %}
-<style>
+<style >
 #login-container {
 height: 90%;
 display: grid;
@@ -28,7 +28,7 @@ display:inline;
 
 </div>
 {% if u2f_enabled %}
-<script>
+<script >
 var p = {{ payload | tojson }};
 if (p) {
 u2f.sign(p.appId, p.challenge, p.registeredKeys, function(resp) {

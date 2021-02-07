@@ -190,5 +190,8 @@ REPLIES_IN_STREAM = bool(conf.get("replies_in_stream", False))
 # By default, we keep 14 of inbox data ; outbox is kept forever (along with bookmarked stuff, outbox replies, liked...)
 DAYS_TO_KEEP = int(conf.get("days_to_keep", 32))
 
+# URL link to source code
+SOURCECODE_URL = conf.get("sourcecode_url", "https://github.com/tsileo/microblog.pub")
+
 # Load custom emojis (stored in static/emojis)
 _load_emojis(ROOT_DIR, BASE_URL)

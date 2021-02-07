@@ -72,8 +72,8 @@ a:hover {
   display: inline;
   padding: 10px;
   color: $color-light;
-  border-radius-bottom-left: 2px;
-  border-radius-bottom-right: 2px;
+  border-bottom-left-radius: 2px;
+  border-bottom-right-radius: 2px;
   .left { float: left; }
   .right { float: right; }
   li {
@@ -246,7 +246,7 @@ header#header {
   color: $color-light;
   margin-right:10px;
   border-radius:2px;
-  float: left;
+  // float: left;
 }
 .bar-item-no-hover:hover {
   cursor: default;
