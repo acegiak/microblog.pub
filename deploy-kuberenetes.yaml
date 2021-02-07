@@ -1,0 +1,146 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-service
+spec:
+  selector:
+    app: mongo-backend
+  ports:
+  - port: 27017
+    targetPort: 27017
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo-backend-deployment
+spec:
+  selector:
+    matchLabels:
+      app: mongo-backend
+  template:
+    metadata:
+      labels:
+        app: mongo-backend
+    spec:
+      containers:
+      - name: mongo
+        image: mongo:3 
+        resources:
+          requests:
+            memory: "500Mi"
+            cpu: "100m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        ports:
+        - containerPort: 27017
+        volumeMounts:
+          - mountPath: /data/db 
+            name: mongo-backend
+          - mountPath: /config 
+            name: server-config-mongo
+      volumes:
+        - name: mongo-backend
+          persistentVolumeClaim:
+            claimName: mongo-backend-vclaim-dev
+        - name: server-config-mongo
+          configMap:
+            name: server-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pousstaches-service
+spec:
+  selector:
+    app: poussetaches-middlewaree
+  ports:
+  - port: 7991
+    targetPort: 7991
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: poussetaches-middleware-deployment
+spec:
+  selector:
+    matchLabels:
+      app: poussetaches-middleware
+  template:
+    metadata:
+      labels:
+        app: poussetaches-middleware
+    spec:
+      containers:
+      - name: poussetaches-middleware
+        image: poussetaches/poussetaches:latest
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "100m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 7991
+        env:
+          - name: POSSETACHES_AUTH_KEY
+            valueFrom:
+              configMapKeyRef:
+                name: possetaches-config
+                key: auth-key
+        volumeMounts:
+          - mountPath: /config
+            name: server-config-poussetaches
+      volumes:
+        - name: server-config-poussetaches
+          configMap:
+            name: server-config
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-backend-vclaim-dev
+spec:
+  resources:
+    requests:
+      storage: 5Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  volumeName: mongo-backend-volume-dev
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongo-backend-volume-dev
+spec:
+  capacity:
+    storage: 5Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard
+  persistentVolumeReclaimPolicy: Recycle
+  hostPath:
+    path: /data/mongo-dev
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: envvars
+data:
+  FLASK_DEBUG: '0'
+  MICROBLOG_DEBUG: 'false'
+  MICROBLOG_INTERNAL_HOST: "http://localhost:5000"
+  MICROBLOG_MONGODB_HOST: "localhost:27017"
+  MICROBLOG_POUSSETACHES_HOST: "http://localhost:7991"
+  MICROBLOGPUB_WIZARD_PROJECT_NAME: "microblogpub"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: possetaches-config
+data:
+  auth-key: fafafa
