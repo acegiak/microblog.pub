@@ -111,7 +111,7 @@ csrf.init_app(app)
 talisman = Talisman(
         app,
         content_security_policy=csp,
-	content_security_policy_nonce_in=['script-src']
+	content_security_policy_nonce_in=['script-src'],
         force_https=False,
         )
 
