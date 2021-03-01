@@ -6,6 +6,14 @@ static/media/*
 static/twemoji/*
 static/pure.css
 .env
+venv*
+kubernetes/deploy-kubernetes.yaml
 
 .mypy_cache/
 __pycache__/
+
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+build

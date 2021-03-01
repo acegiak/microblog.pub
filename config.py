@@ -37,14 +37,10 @@ DEFAULT_THEME_PRIMARY_COLOR = {
 
 
 VERSION = (
-    subprocess.check_output(["git", "describe", "--always"]).split()[0].decode("utf-8")
+    "c9b317"
 )
 VERSION_DATE = (
-    subprocess.check_output(["git", "show", VERSION])
-    .decode()
-    .splitlines()[2]
-    .split("Date:")[-1]
-    .strip()
+    "Sun Feb 7 13:51:45 2021 -0800"
 )
 
 DEBUG_MODE = strtobool(os.getenv("MICROBLOGPUB_DEBUG", "false"))
