@@ -1,7 +1,14 @@
 SHELL := /bin/bash
 PYTHON=python
 SETUP_WIZARD_IMAGE=microblogpub-setup-wizard:latest
+MICROBLOGPUB_IMAGE=micropubblog:latest
+CR_IMAGE=us.gcr.io/hematite-300609/microblogpub-dev
+K8_BACKEND_YAML=deploy-backend.yaml
+K8_BACKEND_YAML=deploy-microblogpub.yaml
 PWD=$(shell pwd)
+
+# used to make usable with podman
+CONT_EXEC := $(if $(shell command -v "podman"), podman, docker)
 
 # Build the config (will error if an existing config/me.yml is found) via a Docker container
 .PHONY: config
@@ -9,14 +16,14 @@ config:
 	# Build the container for the setup wizard on-the-fly
 	cd setup_wizard && docker build . -t $(SETUP_WIZARD_IMAGE)
 	# Run and remove instantly
-	-docker run -e MICROBLOGPUB_WIZARD_PROJECT_NAME --rm -it --volume $(PWD):/app/out $(SETUP_WIZARD_IMAGE)
+	-${CONT_EXEC} run -e MICROBLOGPUB_WIZARD_PROJECT_NAME --rm -it --volume $(PWD):/app/out $(SETUP_WIZARD_IMAGE)
 	# Finally, remove the tagged image
-	docker rmi $(SETUP_WIZARD_IMAGE)
+	${CONT_EXEC} rmi $(SETUP_WIZARD_IMAGE)
 
 # Reload the federation test instances (for local dev)
 .PHONY: reload-fed
 reload-fed:
-	docker build . -t microblogpub:latest
+	${CONT_EXEC} build . -t microblogpub:latest
 	docker-compose -p instance2 -f docker-compose-tests.yml stop
 	docker-compose -p instance1 -f docker-compose-tests.yml stop
 	WEB_PORT=5006 CONFIG_DIR=./tests/fixtures/instance1/config docker-compose -p instance1 -f docker-compose-tests.yml up -d --force-recreate --build
@@ -25,7 +32,7 @@ reload-fed:
 # Reload the local dev instance
 .PHONY: reload-dev
 reload-dev:
-	docker build . -t microblogpub:latest
+	${CONT_EXEC} build . -t ${MICROBLOGPUB_IMAGE}
 	docker-compose -f docker-compose-dev.yml up -d --force-recreate
 
 # Build the microblogpub Docker image
@@ -34,7 +41,7 @@ microblogpub:
 	# Update microblog.pub
 	git pull
 	# Rebuild the Docker image
-	docker build . --no-cache -t microblogpub:latest
+	${CONT_EXEC} build . --no-cache -t microblogpub:latest
 
 .PHONY: css
 css:
@@ -48,8 +55,28 @@ css:
 run: microblogpub css
 	# (poussetaches and microblogpub Docker image will updated)
 	# Update MongoDB
-	docker pull mongo:3
-	docker pull poussetaches/poussetaches
+	${CONT_EXEC} pull mongo:3
+	${CONT_EXEC} pull poussetaches/poussetaches
 	# Restart the project
 	docker-compose stop
 	docker-compose up -d --force-recreate --build
+
+# Run as a full deployment in Kubernetes, assming kubectl is set to correct
+# cluster already
+.PHONY: run-k8
+run-k8: publish-image css
+	kubectl apply -f ${K8_BACKEND_YAML}
+	kubectl apply -f ${K8_INSTANCE_YAML}
+
+# publish-image pushes image to container reigstry(cr), assume CONT_EXEC is
+# authenecticated against cr
+.PHONY: publish-image
+publish-image: microblogpub
+	${CONT_EXEC} tag ${MICROBLOGPUB_IMAGE} ${CR_IMAGE}
+	${CONT_EXEC} push ${CR_IMAGE}
+
+# run the backend service for on k8 and setup tunneling for dev
+#TODO: test with podman container
+.PHONY: dev-k8
+dev-k8: microblogpub css
+	kubectl apply -f ${K8_BACKEND_YAML}
