@@ -1,6 +1,9 @@
 SHELL := /bin/bash
 PYTHON=python
+CONT_EXEC := $(if $(shell command -v "podman"), podman, docker)
+K8_YAML = 
 SETUP_WIZARD_IMAGE=microblogpub-setup-wizard:latest
+K8_IMAGE=microblogpub
 PWD=$(shell pwd)
 
 # Build the config (will error if an existing config/me.yml is found) via a Docker container
@@ -16,17 +19,12 @@ config:
 # Reload the federation test instances (for local dev)
 .PHONY: reload-fed
 reload-fed:
-	docker build . -t microblogpub:latest
-	docker-compose -p instance2 -f docker-compose-tests.yml stop
-	docker-compose -p instance1 -f docker-compose-tests.yml stop
-	WEB_PORT=5006 CONFIG_DIR=./tests/fixtures/instance1/config docker-compose -p instance1 -f docker-compose-tests.yml up -d --force-recreate --build
-	WEB_PORT=5007 CONFIG_DIR=./tests/fixtures/instance2/config docker-compose -p instance2 -f docker-compose-tests.yml up -d --force-recreate --build
-
-# Reload the local dev instance
+	${CONT_EXEC} build . -t ${K8_IMAGE}:latest
+	# Reload the local dev instance
+	kubectl apply -f ${K8_YAML}
 .PHONY: reload-dev
 reload-dev:
-	docker build . -t microblogpub:latest
-	docker-compose -f docker-compose-dev.yml up -d --force-recreate
+	${CONT_EXEC} build . -t ${K8_IMAGE}:latest
 
 # Build the microblogpub Docker image
 .PHONY: microblogpub
@@ -34,7 +32,7 @@ microblogpub:
 	# Update microblog.pub
 	git pull
 	# Rebuild the Docker image
-	docker build . --no-cache -t microblogpub:latest
+	${CONT_EXEC}} build . --no-cache -t microblogpub:latest
 
 .PHONY: css
 css:
@@ -46,10 +44,5 @@ css:
 # Run the docker-compose project locally (will perform a update if the project is already running)
 .PHONY: run
 run: microblogpub css
-	# (poussetaches and microblogpub Docker image will updated)
-	# Update MongoDB
-	docker pull mongo:3
-	docker pull poussetaches/poussetaches
 	# Restart the project
-	docker-compose stop
-	docker-compose up -d --force-recreate --build
+	kubectl apply -f ${K8_YAML}
