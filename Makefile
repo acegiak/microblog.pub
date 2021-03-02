@@ -3,11 +3,7 @@ PYTHON=python
 CONT_EXEC := $(if $(shell command -v "podman"), podman, docker)
 K8_YAML = 
 SETUP_WIZARD_IMAGE=microblogpub-setup-wizard:latest
-<<<<<<< HEAD
-K8_IMAGE=microblogpub
-=======
 MICROBLOGPUB_IMAGE=microblogpub:latest
->>>>>>> howaboutudance/issue9
 PWD=$(shell pwd)
 CR_IMAGE=us.gcr.io/hematite-300609/microblogpub-dev
 K8_BACKEND_YAML=kubernetes/deploy-backend.yaml
@@ -28,14 +24,6 @@ config:
 # Reload the federation test instances (for local dev)
 .PHONY: reload-fed
 reload-fed:
-<<<<<<< HEAD
-	${CONT_EXEC} build . -t ${K8_IMAGE}:latest
-	# Reload the local dev instance
-	kubectl apply -f ${K8_YAML}
-.PHONY: reload-dev
-reload-dev:
-	${CONT_EXEC} build . -t ${K8_IMAGE}:latest
-=======
 	${CONT_EXEC} build . -t ${MICROBLOGPUB_IMAGE} 
 	docker-compose -p instance2 -f docker-compose-tests.yml stop
 	docker-compose -p instance1 -f docker-compose-tests.yml stop
@@ -47,17 +35,12 @@ reload-dev:
 reload-dev:
 	${CONT_EXEC} build . -t ${MICROBLOGPUB_IMAGE}
 	docker-compose -f docker-compose-dev.yml up -d --force-recreate
->>>>>>> howaboutudance/issue9
 
 # Build the microblogpub Docker image
 .PHONY: microblogpub
 microblogpub:
 	# Rebuild the Docker image
-<<<<<<< HEAD
-	${CONT_EXEC}} build . --no-cache -t microblogpub:latest
-=======
 	${CONT_EXEC} build . --no-cache --target=app -t ${MICROBLOGPUB_IMAGE} 
->>>>>>> howaboutudance/issue9
 
 .PHONY: css
 css:
@@ -69,10 +52,6 @@ css:
 # Run the docker-compose project locally (will perform a update if the project is already running)
 .PHONY: run
 run: microblogpub css
-<<<<<<< HEAD
-	# Restart the project
-	kubectl apply -f ${K8_YAML}
-=======
 	# (poussetaches and microblogpub Docker image will updated)
 	# Update MongoDB
 	${CONT_EXEC} pull mongo:3
@@ -108,4 +87,3 @@ dev-k8: microblogpub css
 		-e MICROBLOGPUB_POUSSETACHES_HOST=${MINI_IP}:${POUSS_PORT} \
 		${MICROBLOGPUB_IMAGE}
 
->>>>>>> howaboutudance/issue9
