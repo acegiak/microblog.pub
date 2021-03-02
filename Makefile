@@ -1,12 +1,11 @@
 SHELL := /bin/bash
 PYTHON=python
 SETUP_WIZARD_IMAGE=microblogpub-setup-wizard:latest
-MICROBLOGPUB_IMAGE=micropubblog:latest
-CR_IMAGE=us.gcr.io/hematite-300609/microblogpub-dev
-K8_BACKEND_YAML=deploy-backend.yaml
-K8_BACKEND_YAML=deploy-microblogpub.yaml
+MICROBLOGPUB_IMAGE=microblogpub:latest
 PWD=$(shell pwd)
-
+CR_IMAGE=us.gcr.io/hematite-300609/microblogpub-dev
+K8_BACKEND_YAML=kubernetes/deploy-backend.yaml
+K8_INSTANCE_YAML=kubernetes/deploy-microblogpub.yaml
 # used to make usable with podman
 CONT_EXEC := $(if $(shell command -v "podman"), podman, docker)
 
@@ -23,7 +22,7 @@ config:
 # Reload the federation test instances (for local dev)
 .PHONY: reload-fed
 reload-fed:
-	${CONT_EXEC} build . -t microblogpub:latest
+	${CONT_EXEC} build . -t ${MICROBLOGPUB_IMAGE} 
 	docker-compose -p instance2 -f docker-compose-tests.yml stop
 	docker-compose -p instance1 -f docker-compose-tests.yml stop
 	WEB_PORT=5006 CONFIG_DIR=./tests/fixtures/instance1/config docker-compose -p instance1 -f docker-compose-tests.yml up -d --force-recreate --build
@@ -38,10 +37,8 @@ reload-dev:
 # Build the microblogpub Docker image
 .PHONY: microblogpub
 microblogpub:
-	# Update microblog.pub
-	git pull
 	# Rebuild the Docker image
-	${CONT_EXEC} build . --no-cache -t microblogpub:latest
+	${CONT_EXEC} build . --no-cache --target=app -t ${MICROBLOGPUB_IMAGE} 
 
 .PHONY: css
 css:
@@ -80,3 +77,11 @@ publish-image: microblogpub
 .PHONY: dev-k8
 dev-k8: microblogpub css
 	kubectl apply -f ${K8_BACKEND_YAML}
+	$(eval MINI_IP := $(shell minikube ip))
+	$(eval MONGO_PORT := $(shell kubectl get service mongo-service --output='jsonpath="{.spec.ports[0].nodePort}"' | tr -d \"))
+	$(eval POUSS_PORT := $(shell kubectl get service pousstaches-service --output='jsonpath="{.spec.ports[0].nodePort}"' | tr -d \"))
+	${CONT_EXEC} run -it -p 5005:5005 -v ${PWD}/config:/app/config \
+		-e MICROBLOGPUB_MONGODB_HOST=${MINI_IP}:${MONGO_PORT} \
+		-e MICROBLOGPUB_POUSSETACHES_HOST=${MINI_IP}:${POUSS_PORT} \
+		${MICROBLOGPUB_IMAGE}
+
