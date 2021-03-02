@@ -42,10 +42,38 @@ spec:
       volumes:
         - name: mongo-backend
           persistentVolumeClaim:
-            claimName: mongo-backend-vclaim-dev
+            claimName: mongo-backend-vclaim
         - name: server-config-mongo
           configMap:
             name: server-config
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-backend-vclaim
+spec:
+  resources:
+    requests:
+      storage: 5Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  volumeName: mongo-backend-volume-dev
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongo-backend-volume-dev
+spec:
+  capacity:
+    storage: 5Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard
+  persistentVolumeReclaimPolicy: Recycle
+  hostPath:
+    path: /data/mongo-dev
 ---
 apiVersion: v1
 kind: Service
@@ -53,7 +81,7 @@ metadata:
   name: pousstaches-service
 spec:
   selector:
-    app: poussetaches-middlewaree
+    app: poussetaches-middleware
   ports:
   - port: 7991
     targetPort: 7991
@@ -96,51 +124,10 @@ spec:
         - name: server-config-poussetaches
           configMap:
             name: server-config
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: mongo-backend-vclaim-dev
-spec:
-  resources:
-    requests:
-      storage: 5Gi
-  volumeMode: Filesystem
-  accessModes:
-    - ReadWriteOnce
-  volumeName: mongo-backend-volume-dev
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: mongo-backend-volume-dev
-spec:
-  capacity:
-    storage: 5Gi
-  volumeMode: Filesystem
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: standard
-  persistentVolumeReclaimPolicy: Recycle
-  hostPath:
-    path: /data/mongo-dev
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: envvars
-data:
-  FLASK_DEBUG: '0'
-  MICROBLOG_DEBUG: 'false'
-  MICROBLOG_INTERNAL_HOST: "http://localhost:5000"
-  MICROBLOG_MONGODB_HOST: "localhost:27017"
-  MICROBLOG_POUSSETACHES_HOST: "http://localhost:7991"
-  MICROBLOGPUB_WIZARD_PROJECT_NAME: "microblogpub"
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: possetaches-config
 data:
-  auth-key: fafafa
+  auth-key: "1234567890"

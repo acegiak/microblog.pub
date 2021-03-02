@@ -7,7 +7,7 @@ static/twemoji/*
 static/pure.css
 .env
 venv*
-kubernetes/deploy-kubernetes.yaml
+kubernetes/deploy*.yaml
 
 .mypy_cache/
 __pycache__/
