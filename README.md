@@ -13,7 +13,18 @@
 <a href="https://github.com/ambv/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 </p>
 
+## Notes
+
+From [@tsileo](https://github.com/tsileo):
+
 **Still in early development/I do not recommend to run an instance yet.**
+
+From [@howaboutudance](https://github.com/howaboutudance):
+
+very much a WIP as a personal project, filing issues on my personal repo and
+working to get working code since seems like @tsileo kinda abandoned the code.
+If you wanna help, check out the issue tracker and email via the address on
+[my profile](https://github.com/howaboutudance)
 
 <!-- start -->
 
