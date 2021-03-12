@@ -71,10 +71,21 @@ run: microblogpub css
 
 # Run as a full deployment in Kubernetes, assming kubectl is set to correct
 # cluster already
-.PHONY: run-k8
-run-k8: publish-image css
-	kubectl apply -f ${K8_BACKEND_YAML}
+.PHONY: dev-k8
+dev-k8: publish-dev css expose-k8
+	kubectl apply -f ${K8_BACKEND_YAML}	
 	kubectl apply -f ${K8_INSTANCE_YAML}
+
+expose-k8:
+	kubectl expose deployment microblogpub-dev --port=5005 --type=LoadBalancer --name microblogpub-loadbalancer --dry-run=client --output=yaml | kubectl apply -f -
+
+	set -e; \
+	kubectl create configmap deployvars \
+		--from-literal=internal-host=$(shell minikube service microblogpub-loadbalancer --url=true) \
+		-o yaml \
+		--dry-run=client | \
+		kubectl replace -f -;
+	
 
 # publish-image pushes image to container reigstry(cr), assume CONT_EXEC is
 # authenecticated against cr
@@ -88,12 +99,12 @@ publish-dev: microblogpub-dev
 	${CONT_EXEC} tag ${MICROBLOGPUB_DEV_IMAGE} ${CR_DEV_IMAGE}
 	${CONT_EXEC} push ${CR_DEV_IMAGE}
 # run the backend service for on k8 and setup tunneling for dev
-.PHONY: dev-k8
-dev-k8: microblogpub-dev css
+.PHONY: dev-local-k8
+dev-local-k8: microblogpub-dev css
 	kubectl apply -f ${K8_BACKEND_YAML}
 	$(eval MINI_IP := $(shell minikube ip))
-	$(eval MONGO_PORT := $(shell kubectl get service mongo-service --output='jsonpath="{.spec.ports[0].nodePort}"' | tr -d \"))
-	$(eval POUSS_PORT := $(shell kubectl get service poussetaches-service --output='jsonpath="{.spec.ports[0].nodePort}"' | tr -d \"))
+	$(eval MONGO_PORT := $(shell kubectl get service mongo-service --output='jsonpath={.spec.ports[0].nodePort}'))
+	$(eval POUSS_PORT := $(shell kubectl get service poussetaches-service --output='jsonpath={.spec.ports[0].nodePort}'))
 	${CONT_EXEC} run -it -p 5005:5005 -v ${PWD}/config:/app/config \
 		-e MICROBLOGPUB_MONGODB_HOST=${MINI_IP}:${MONGO_PORT} \
 		-e MICROBLOGPUB_POUSSETACHES_HOST=http://${MINI_IP}:${POUSS_PORT} \

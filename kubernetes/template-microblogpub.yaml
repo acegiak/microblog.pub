@@ -43,7 +43,15 @@ spec:
                   name: envvars
                   key: mongodb-host
             - name: MICROBLOGPUB_POUSSETACHES_HOST 
-              value: "http://poussetaches:7991"
+              valueFrom:
+                configMapKeyRef:
+                  name: envvars
+                  key: poussetaches-host
+            - name: MICROBLOGPUB_INTERNAL_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: deployvars
+                  key: internal-host
           volumeMounts:
             - mountPath: /app/config/me.yml
               name: server-config-microblogpub
@@ -84,3 +92,13 @@ spec:
       theme:
           style: "dark" #or "dark"
           color: "#33ff00"   # (purple, default for dark)
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: envvars
+data:
+  mongodb-host: mongo-service:27017
+  poussetaches-host: http://poussetaches-service:7991
+  flask-debug: "1"
+  microblogpub-dev: "1"
