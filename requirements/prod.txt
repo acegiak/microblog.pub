@@ -1,0 +1,2 @@
+-r common.txt
+git+https://github.com/tsileo/little-boxes.git@litepub#egg=little_boxes
