@@ -7,8 +7,8 @@ MICROBLOGPUB_IMAGE=microblogpub:latest
 MICROBLOGPUB_DEV_IMAGE=microblogpub-dev:latest
 PWD=$(shell pwd)
 #FIXME change url if using functionality
-CR_DEV_IMAGE=us.gcr.io/hematite-300609/microblogpub-dev
-CR_PROD_IMAGE=us.gcr.io/hematite-300609/microblogpub-prod
+CR_DEV_IMAGE=ghcr.io/howaboutudance/microblogpub-dev
+CR_PROD_IMAGE=ghcr.io/howaboutudance/microblogpub-prod
 K8_BACKEND_YAML=kubernetes/deploy-backend.yaml
 K8_INSTANCE_YAML=kubernetes/deploy-microblogpub.yaml
 # used to make usable with podman
@@ -97,7 +97,7 @@ publish-image: microblogpub
 .PHONY: publish-dev
 publish-dev: microblogpub-dev
 	${CONT_EXEC} tag ${MICROBLOGPUB_DEV_IMAGE} ${CR_DEV_IMAGE}
-	${CONT_EXEC} push ${CR_DEV_IMAGE}
+	${CONT_EXEC} push ${CR_DEV_IMAGE}:latest
 # run the backend service for on k8 and setup tunneling for dev
 .PHONY: dev-local-k8
 dev-local-k8: microblogpub-dev css

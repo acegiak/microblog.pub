@@ -1,10 +1,10 @@
 FROM python:3.9 AS base
 
 FROM base AS builder
-COPY requirements.txt /install/requirements.txt
+COPY requirements/. /install/requirements/
 WORKDIR /install
 RUN pip install --prefix=/install --no-warn-script-location \
-    -r requirements.txt
+    -r requirements/prod.txt
 
 FROM python:3.9-slim AS app
 COPY --from=builder /install /usr/local
@@ -25,9 +25,9 @@ ENV FLASK_APP=app.py \
     MICROBLOGPUB_DEV=1
 
 FROM app AS test
-COPY requirements-dev.txt /app/requirements-dev.txt
+COPY requirements/. /app/requirements/.
 WORKDIR /app
-RUN pip install -r requirements-dev.txt
+RUN pip install -r requirements/dev.txt
 
 FROM app as dev
 WORKDIR /app
