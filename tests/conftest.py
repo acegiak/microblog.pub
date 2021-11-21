@@ -1,0 +1,1 @@
+from fixtures.config_fixture import *
