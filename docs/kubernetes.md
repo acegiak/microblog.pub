@@ -18,8 +18,9 @@ For configuration, inside the kubernetes folder of the repo there are two files:
 these two provide templates that need to be edited to be ready for deployment.
 
 Further, the Makefile may need some edits too, primarily being:
--Image Names to build too
--Container register image name  to push the image to a CR when needed
+
+- Image Names to build to
+- Container register image name  to push the image to a CR when needed
 
 ## Backend
 
