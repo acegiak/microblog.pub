@@ -1,6 +1,5 @@
 SHELL := /bin/bash
 PYTHON=python
-CONT_EXEC := $(if $(shell command -v "podman"), podman, docker)
 K8_YAML = 
 SETUP_WIZARD_IMAGE=microblogpub-setup-wizard:latest
 MICROBLOGPUB_IMAGE=microblogpub:latest
