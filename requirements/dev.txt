@@ -1,8 +1,7 @@
+-r test.txt
 git+https://github.com/tsileo/little-boxes.git
-pytest
-requests
 html2text
 pyyaml
 flake8
-mypy
-black
+ipython
+ipdb

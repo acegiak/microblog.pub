@@ -50,6 +50,7 @@ from utils import now
 from utils.emojis import EMOJIS_BY_NAME
 from utils.lookup import lookup
 
+import pdb
 blueprint = flask.Blueprint("admin", __name__)
 
 
@@ -89,11 +90,13 @@ def admin_login() -> _Response:
     devices = [doc["device"] for doc in DB.u2f.find()]
     u2f_enabled = True if devices else False
     if request.method == "POST":
+        app.logger.info(request.form)
         csrf.protect()
         # 1. Check regular password login flow
         pwd = request.form.get("pass")
         if pwd:
             if verify_pass(pwd):
+                app.logger.info("entered password block")
                 session.permanent = True
                 session["logged_in"] = True
                 return redirect(

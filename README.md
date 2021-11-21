@@ -90,18 +90,10 @@ $ make config
 Once the initial configuration is done, you can still tweak the config by editing `config/me.yml` directly.
 
 
-### Deployment
+### Deployment 
+- [Docker Compose Deployment][dockerconfig]
+- [Kubernetes Setup & Deployment][kubeconfig]
 
-To spawn the docker-compose project (running this command will also update _microblog.pub_ to latest and restart everything if it's already running):
-
-```shell
-$ make run
-```
-
-By default, the server will listen on `localhost:5005` (http://localhost:5005 should work if you're running locally).
-
-For production, you need to setup a reverse proxy (nginx, caddy) to forward your domain to the local server 
-(and check [certbot](https://certbot.eff.org/) for getting a free TLS certificate).
 
 ### Backup
 
@@ -129,3 +121,6 @@ $ FLASK_DEBUG=1 MICROBLOGPUB_DEBUG=1 FLASK_APP=app.py POUSSETACHES_AUTH_KEY="<se
 ## Contributions
 
 Contributions/PRs are welcome, please open an issue to start a discussion before your start any work.
+
+[kubeconfig]: docs/kubernetes.md
+[dockerconfig]: docs/ducker.md

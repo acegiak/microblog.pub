@@ -1,19 +1,11 @@
 import os
-
+from pathlib import Path
 import pytest
 import requests
 from html2text import html2text
+import yaml
 
-
-@pytest.fixture
-def config():
-    """Return the current config as a dict."""
-    import yaml
-
-    with open(
-        os.path.join(os.path.dirname(__file__), "..", "config/me.yml"), "rb"
-    ) as f:
-        yield yaml.load(f)
+pytestmark = pytest.mark.intergration
 
 
 def resp2plaintext(resp):
@@ -21,7 +13,7 @@ def resp2plaintext(resp):
     return html2text(resp.text)
 
 
-def test_ping_homepage(config):
+def test_ping_homepage(config_fixture):
     """Ensure the homepage is accessible."""
     resp = requests.get("http://localhost:5005")
     resp.raise_for_status()

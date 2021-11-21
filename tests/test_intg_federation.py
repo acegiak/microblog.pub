@@ -1,5 +1,6 @@
 import os
 import time
+import pytest
 from typing import List
 from typing import Tuple
 
@@ -7,6 +8,8 @@ import requests
 from html2text import html2text
 from little_boxes.collection import parse_collection
 
+# TODO: fix test to be usable with two instances as an intergration test
+pytestmark = pytest.mark.skip
 
 def resp2plaintext(resp):
     """Convert the body of a requests reponse to plain text in order to make basic assertions."""
