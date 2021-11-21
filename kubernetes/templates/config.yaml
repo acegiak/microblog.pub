@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: server-config
+data:
+  me.yml: | 
+    username: 'username' 
+    name: 'You Name' 
+    domain: 'your-domain.tld' 
+    https: true 
+    summary: 'your summary' 
+    icon_url: 'https://you-avatar-url' 
+    pass: '<bcrypt password hash>'
+    sourcecode_url: 'https://github.com/howaboutudance/microblog.pub'
