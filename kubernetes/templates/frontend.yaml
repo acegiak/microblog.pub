@@ -26,7 +26,7 @@ spec:
       spec:
         containers:
         - name: microblogpub-dev
-          image: #FIXME: pull in your own image
+          image: ghcr.io/howaboutudance/microblogpub-dev
           resources:
             requests:
               memory: "64Mi"
@@ -59,39 +59,12 @@ spec:
         volumes:
           - name: server-config-microblogpub
             configMap:
-              name: server-config
+              name: frontend-config
               items:
                 - key: me.yml
                   path: me.yml
         imagePullSecrets:
-        - name: gcr-json-key #FIXME if using GCR set key
----
-  apiVersion: v1
-  kind: ConfigMap
-  metadata:
-    name: server-config
-  data:
-    me.yml: |
-      username: 
-      name: 
-      domain: 
-      https: true
-      summary: 
-      icon_url: 
-      pass: 
-      sourcecode_url: 'https://github.com/howaboutudance/microblog.pub'
-      favicon_url: '/static/favicon.png'
-      #profile_metadata:
-      #    name1: 'value'
-      #    name2: 'value2'
-      #hide_following: true
-      #manually_approves_followers: false
-      #aliases:
-      #    - "http://example.com/users/name"
-      #    - ...
-      theme:
-          style: "dark" #or "dark"
-          color: "#33ff00"   # (purple, default for dark)
+        - name: registry-dockerconfigjson
 ---
 apiVersion: v1
 kind: ConfigMap

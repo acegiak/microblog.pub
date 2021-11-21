@@ -12,3 +12,30 @@ data:
     icon_url: 'https://you-avatar-url' 
     pass: '<bcrypt password hash>'
     sourcecode_url: 'https://github.com/howaboutudance/microblog.pub'
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+data:
+  me.yml: |
+    username:
+    name:
+    domain:
+    https: true
+    summary:
+    icon_url:
+    pass:
+    sourcecode_url: 'https://github.com/howaboutudance/microblog.pub'
+    favicon_url: '/static/favicon.png'
+    #profile_metadata:
+    #    name1: 'value'
+    #    name2: 'value2'
+    #hide_following: true
+    #manually_approves_followers: false
+    #aliases:
+    #    - "http://example.com/users/name"
+    #    - ...
+    theme:
+        style: "dark" #or "dark"
+        color: "#33ff00"   # (purple, default for dark)
