@@ -5,7 +5,7 @@ import requests
 from html2text import html2text
 import yaml
 
-pytestmark = pytest.mark.intergration
+pytestmark = pytest.mark.integration
 
 
 def resp2plaintext(resp):
