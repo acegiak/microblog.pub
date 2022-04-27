@@ -27,6 +27,7 @@ ENV FLASK_APP=app.py \
 FROM app AS test
 COPY requirements/. /app/requirements/.
 WORKDIR /app
+RUN apt-get update && apt-get install -y git
 RUN pip install -r requirements/dev.txt
 
 FROM app as dev
