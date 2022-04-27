@@ -10,12 +10,12 @@ requests
 python-u2flib-server
 Flask
 Flask-WTF
-pymongo
+pymongo==3.12.0
 timeago
 bleach
 html2text
 feedgen
-itsdangerous
+itsdangerous==1.1.0
 bcrypt
 mf2py
 passlib
@@ -26,3 +26,4 @@ emoji-unicode
 html5lib
 Pygments
 flask-talisman
+markupsafe==2.0.1
