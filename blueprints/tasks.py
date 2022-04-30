@@ -430,7 +430,7 @@ def task_cache_actor() -> _Response:
         app.logger.exception(f"flagging activity {iri} as deleted, no actor caching")
     except Exception as err:
         app.logger.exception(f"failed to cache actor for {iri}")
-        raise TaskError() from err
+        #raise TaskError() from err
 
     return ""
 
