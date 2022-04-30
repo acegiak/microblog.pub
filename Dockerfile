@@ -27,16 +27,18 @@ ENV FLASK_APP=app.py \
 FROM app AS test
 COPY requirements/. /app/requirements/.
 WORKDIR /app
-RUN apt-get update && apt-get install -y git
+RUN apt-get update && apt-get install -y git curl
 RUN pip install -r requirements/dev.txt
 
 FROM app as dev
 WORKDIR /app
+RUN apt-get update && apt-get install -y git curl
 COPY run_dev.sh ./
 CMD ["./run_dev.sh"]
 
 FROM app as prod
 WORKDIR /app
+RUN apt-get update && apt-get install -y git curl
 COPY run.sh ./
 CMD ["./run.sh"]
 
