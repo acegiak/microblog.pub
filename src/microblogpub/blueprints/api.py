@@ -579,11 +579,9 @@ def api_new_note() -> _Response:
         raw_note["location"] = location
 
     if request.files:
-        for f in request.files.keys():
-            if not request.files[f].filename:
-                continue
-
-            file = request.files[f]
+        raw_note["attachment"] = []
+        app.logger.info("attachments recieved: %", request.files)
+        for file in request.files.getlist('files[]'):
             rfilename = secure_filename(file.filename)
             with BytesIO() as buf:
                 # bypass file.save(), because it can't save to a file-like object
@@ -591,14 +589,14 @@ def api_new_note() -> _Response:
                 oid = MEDIA_CACHE.save_upload(buf, rfilename)
             mtype = mimetypes.guess_type(rfilename)[0]
 
-            raw_note["attachment"] = [
-                {
+            dataobject = {
                     "mediaType": mtype,
                     "name": _user_api_arg("file_description", default=rfilename),
                     "type": "Document",
                     "url": f"{BASE_URL}/uploads/{oid}/{rfilename}",
-                }
-            ]
+            }
+            app.logger.info("uploaded attachement: %",dataobject)
+            raw_note["attachment"].append(dataobject)
 
     note = ap.Note(**raw_note)
     create = note.build_create()
