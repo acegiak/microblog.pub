@@ -12,14 +12,16 @@
 {{ utils.display_thread(thread) }}
 {% else %}
 <div class="tabbar">
-{% if request.args.get("question") == "1" %}
-<a href="{{ url_for('admin.admin_new') }}" class="tab">Note</a><a href="{{ url_for('admin.admin_new') }}?question=1" class="tab selected">Question</a>
+{% if request.args.get("type") == "question" %}
+<a href="{{ url_for('admin.admin_new') }}?type=note" class="tab">Note</a><a href="{{ url_for('admin.admin_new') }}?type=article" class="tab">Article</a><a href="{{ url_for('admin.admin_new') }}?type=question" class="tab selected">Question</a>
+{% elif request.args.get("type") == "article" %}
+<a href="{{ url_for('admin.admin_new') }}?type=note" class="tab">Note</a><a href="{{ url_for('admin.admin_new') }}?type=article" class="tab selected">Article</a><a href="{{ url_for('admin.admin_new') }}?type=question" class="tab">Question</a>
 {% else %}
-<a href="{{ url_for('admin.admin_new') }}" class="tab selected">Note</a><a href="{{ url_for('admin.admin_new') }}?question=1" class="tab">Question</a>
+<a href="{{ url_for('admin.admin_new') }}?type=note" class="tab selected">Note</a><a href="{{ url_for('admin.admin_new') }}?type=article" class="tab">Article</a><a href="{{ url_for('admin.admin_new') }}?type=question" class="tab">Question</a>
 {% endif %}
 </div>
 {% endif %}
-<form id="new-activity" action="/api/new_{% if request.args.get("question") == "1" %}question{%else%}note{%endif%}" method="POST" enctype="multipart/form-data">
+<form id="new-activity" action="/api/new_{{ request.args.get("type")}}" method="POST" enctype="multipart/form-data">
 <input type="hidden" name="redirect" value="/">
 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 <select name="visibility" style="padding:8px 10px;">
@@ -28,6 +30,10 @@
 {% endfor %}
 </select>
 {% if reply %}<input type="hidden" name="reply" value="{{reply}}">{% endif %}
+
+{% if request.args.get("type") == "article" %}
+<p><input type="text" name="title" placeholder="title (optional)"></p>
+{% endif %}
 
 <p><input type="text" name="summary" placeholder="summary/CW (optional)"></p>
 
@@ -58,7 +64,7 @@
 <input type="text" name="location_name" placeholder="location name (optional)">
 </p>
 
-{% if request.args.get("question") == "1" %}
+{% if request.args.get("type") == "question" %}
 <div style="margin-top:20px;">
     <p>Open for: <select name="open_for">
     <option value="5">5 minutes</option>
