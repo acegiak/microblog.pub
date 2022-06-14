@@ -1,3 +1,6 @@
+#!/bin/bash
+set +x
+
 podman pod kill web
 podman pod kill mongo
 podman pod kill poussetaches
