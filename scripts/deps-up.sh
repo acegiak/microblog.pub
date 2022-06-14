@@ -1,4 +1,5 @@
 #!/bin/bash
+set +x
 
 # create network if needed
 podman network create microblogpub-network
