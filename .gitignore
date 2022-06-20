@@ -6,6 +6,7 @@ static/media/*
 static/twemoji/*
 static/pure.css
 .env
+.tox
 venv*
 kubernetes/deploy
 kubernetes/deploy*.yaml

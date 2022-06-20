@@ -1,6 +1,5 @@
 SHELL := /bin/bash
 PYTHON=python
-K8_YAML = 
 SETUP_WIZARD_IMAGE=microblogpub-setup-wizard:latest
 MICROBLOGPUB_IMAGE=microblogpub:latest
 MICROBLOGPUB_DEV_IMAGE=microblogpub-dev:latest
@@ -55,7 +54,7 @@ css:
 	# Download pure.css if needed
 	if [[ ! -f static/pure.css ]]; then curl -Lo static/pure.css https://unpkg.com/purecss@1.0.1/build/pure-min.css; fi
 	# Download the emojis from twemoji if needded
-	if [[ ! -d static/twemoji ]]; then curl -L https://github.com/twitter/twemoji/archive/v12.1.2.tar.gz | tar xzf - && mv twemoji-12.1.2/assets/svg static/twemoji && rm -rf twemoji-12.1.2; fi
+	if [[ ! -d static/twemoji ]]; then curl -L https://github.com/twitter/twemoji/archive/v12.1.6.tar.gz | tar xzf - && mv twemoji-12.1.6/assets/svg static/twemoji && rm -rf twemoji-12.1.6; fi
 
 # Run the docker-compose project locally (will perform a update if the project is already running)
 .PHONY: run

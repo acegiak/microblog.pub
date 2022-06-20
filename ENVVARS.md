@@ -1,6 +1,6 @@
 | var                              | default                 |
 |----------------------------------|-------------------------|
-| POUSSETACHES_AUTH_KEY            |                         |
+| POUSSETACHES_AUTH_KEY            | 1234                    |
 | FLASK_DEBUG                      | 0                       |
 | MICROBLOGPUB_DEBUG               | "false"                 |
 | MICROBLOGPUB_INTERNAL_HOST       | "http://localhost:5000" |
