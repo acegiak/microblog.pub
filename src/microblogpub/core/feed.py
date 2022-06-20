@@ -6,11 +6,11 @@ from feedgen.feed import FeedGenerator
 from html2text import html2text
 from little_boxes import activitypub as ap
 
-from config import ID
-from config import ME
-from config import USERNAME
-from core.db import DB
-from core.meta import Box
+from microblogpub.config import ID
+from microblogpub.config import ME
+from microblogpub.config import USERNAME
+from microblogpub.core.db import DB
+from microblogpub.core.meta import Box
 
 
 def gen_feed():

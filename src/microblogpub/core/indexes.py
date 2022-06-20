@@ -1,9 +1,9 @@
 import pymongo
 
-from config import DB
-from config import MEDIA_CACHE
-from core.meta import MetaKey
-from core.meta import _meta
+from microblogpub.config import DB
+from microblogpub.config import MEDIA_CACHE
+from microblogpub.core.meta import MetaKey
+from microblogpub.core.meta import _meta
 
 
 def create_indexes():

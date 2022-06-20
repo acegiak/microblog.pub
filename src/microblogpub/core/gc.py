@@ -10,17 +10,17 @@ from little_boxes import activitypub as ap
 from little_boxes.errors import ActivityGoneError
 from little_boxes.errors import RemoteServerUnavailableError
 
-from config import DAYS_TO_KEEP
-from config import ID
-from config import ME
-from config import MEDIA_CACHE
-from core import activitypub
-from core.meta import Box
-from core.meta import MetaKey
-from core.meta import _meta
-from core.meta import by_type
-from core.meta import in_inbox
-from utils.migrations import DB
+from microblogpub.config import DAYS_TO_KEEP
+from microblogpub.config import ID
+from microblogpub.config import ME
+from microblogpub.config import MEDIA_CACHE
+from microblogpub.core import activitypub
+from microblogpub.core.meta import Box
+from microblogpub.core.meta import MetaKey
+from microblogpub.core.meta import _meta
+from microblogpub.core.meta import by_type
+from microblogpub.core.meta import in_inbox
+from microblogpub.utils.migrations import DB
 
 back = activitypub.MicroblogPubBackend()
 ap.use_backend(back)

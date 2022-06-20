@@ -17,16 +17,14 @@ from flask_wtf.csrf import CSRFProtect
 from little_boxes import activitypub as ap
 from poussetaches import PousseTaches
 
-import config
-from config import DB
-from config import ME
-from core import activitypub
-from core.db import find_activities
-from core.meta import MetaKey
-from core.meta import by_object_id
-from core.meta import by_type
-from core.meta import flag
-from core.meta import not_deleted
+from microblogpub import config
+from microblogpub.core import activitypub
+from microblogpub.core.db import find_activities
+from microblogpub.core.meta import MetaKey
+from microblogpub.core.meta import by_object_id
+from microblogpub.core.meta import by_type
+from microblogpub.core.meta import flag
+from microblogpub.core.meta import not_deleted
 
 # _Response = Union[flask.Response, werkzeug.wrappers.Response, str, Any]
 _Response = Any
@@ -43,7 +41,7 @@ csrf = CSRFProtect()
 back = activitypub.MicroblogPubBackend()
 ap.use_backend(back)
 
-MY_PERSON = ap.Person(**ME)
+MY_PERSON = ap.Person(**config.ME)
 
 
 @lru_cache(512)
@@ -172,7 +170,7 @@ def _build_thread(data, include_children=True, query=None):  # noqa: C901
     ):
         replies.append(dat)
 
-    for dat in DB.replies.find(
+    for dat in config.DB.replies.find(
         {**flag(MetaKey.THREAD_ROOT_PARENT, root_id), **not_deleted(), **query}
     ):
         # Make a Note/Question/... looks like a Create

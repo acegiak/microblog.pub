@@ -6,16 +6,16 @@ from typing import Dict
 
 from little_boxes import activitypub as ap
 
-from core.activitypub import handle_replies
-from core.db import find_one_activity
-from core.db import update_many_activities
-from core.db import update_one_activity
-from core.meta import MetaKey
-from core.meta import by_object_id
-from core.meta import by_type
-from core.meta import inc
-from core.meta import upsert
-from core.tasks import Tasks
+from microblogpub.core.activitypub import handle_replies
+from microblogpub.core.db import find_one_activity
+from microblogpub.core.db import update_many_activities
+from microblogpub.core.db import update_one_activity
+from microblogpub.core.meta import MetaKey
+from microblogpub.core.meta import by_object_id
+from microblogpub.core.meta import by_type
+from microblogpub.core.meta import inc
+from microblogpub.core.meta import upsert
+from microblogpub.core.tasks import Tasks
 
 _logger = logging.getLogger(__name__)
 

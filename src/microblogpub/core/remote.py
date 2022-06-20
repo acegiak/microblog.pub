@@ -1,8 +1,8 @@
 from urllib.parse import urlparse
 
-from core.db import _Q
-from core.db import update_one_remote
-from utils import now
+from microblogpub.core.db import _Q
+from microblogpub.core.db import update_one_remote
+from microblogpub.utils import now
 
 
 def server(url: str) -> str:

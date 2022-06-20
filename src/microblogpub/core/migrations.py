@@ -5,26 +5,26 @@ from urllib.parse import urlparse
 
 from little_boxes import activitypub as ap
 
-from config import ID
-from core import activitypub
-from core.db import DB
-from core.db import find_activities
-from core.db import update_one_activity
-from core.meta import FollowStatus
-from core.meta import MetaKey
-from core.meta import _meta
-from core.meta import by_actor_id
-from core.meta import by_object_id
-from core.meta import by_remote_id
-from core.meta import by_type
-from core.meta import in_inbox
-from core.meta import in_outbox
-from core.meta import not_deleted
-from core.meta import not_undo
-from core.meta import upsert
-from utils.migrations import Migration
-from utils.migrations import logger
-from utils.migrations import perform  # noqa:  just here for export
+from microblogpub.config import ID
+from microblogpub.core import activitypub
+from microblogpub.core.db import DB
+from microblogpub.core.db import find_activities
+from microblogpub.core.db import update_one_activity
+from microblogpub.core.meta import FollowStatus
+from microblogpub.core.meta import MetaKey
+from microblogpub.core.meta import _meta
+from microblogpub.core.meta import by_actor_id
+from microblogpub.core.meta import by_object_id
+from microblogpub.core.meta import by_remote_id
+from microblogpub.core.meta import by_type
+from microblogpub.core.meta import in_inbox
+from microblogpub.core.meta import in_outbox
+from microblogpub.core.meta import not_deleted
+from microblogpub.core.meta import not_undo
+from microblogpub.core.meta import upsert
+from microblogpub.utils.migrations import Migration
+from microblogpub.utils.migrations import logger
+from microblogpub.utils.migrations import perform  # noqa:  just here for export
 
 back = activitypub.MicroblogPubBackend()
 ap.use_backend(back)

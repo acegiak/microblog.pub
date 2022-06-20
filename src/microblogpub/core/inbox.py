@@ -6,22 +6,22 @@ from typing import Dict
 from little_boxes import activitypub as ap
 from little_boxes.errors import NotAnActivityError
 
-import config
-from core.activitypub import _answer_key
-from core.activitypub import accept_follow
-from core.activitypub import handle_replies
-from core.activitypub import update_cached_actor
-from core.db import DB
-from core.db import update_one_activity
-from core.meta import FollowStatus
-from core.meta import MetaKey
-from core.meta import by_object_id
-from core.meta import by_remote_id
-from core.meta import by_type
-from core.meta import in_inbox
-from core.meta import inc
-from core.meta import upsert
-from core.tasks import Tasks
+from microblogpub import config
+from microblogpub.core.activitypub import _answer_key
+from microblogpub.core.activitypub import accept_follow
+from microblogpub.core.activitypub import handle_replies
+from microblogpub.core.activitypub import update_cached_actor
+from microblogpub.core.db import DB
+from microblogpub.core.db import update_one_activity
+from microblogpub.core.meta import FollowStatus
+from microblogpub.core.meta import MetaKey
+from microblogpub.core.meta import by_object_id
+from microblogpub.core.meta import by_remote_id
+from microblogpub.core.meta import by_type
+from microblogpub.core.meta import in_inbox
+from microblogpub.core.meta import inc
+from microblogpub.core.meta import upsert
+from microblogpub.core.tasks import Tasks
 
 _logger = logging.getLogger(__name__)
 

@@ -5,8 +5,8 @@ from pygments import highlight as phighlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import guess_lexer
 
-from config import THEME_STYLE
-from config import ThemeStyle
+from microblogpub.config import THEME_STYLE
+from microblogpub.config import ThemeStyle
 
 _FORMATTER = HtmlFormatter(
     style="default" if THEME_STYLE == ThemeStyle.LIGHT else "vim"

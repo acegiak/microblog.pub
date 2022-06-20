@@ -8,21 +8,21 @@ from typing import Dict
 
 from little_boxes import activitypub as ap
 
-from config import DB
-from config import REPLIES_IN_STREAM
-from core.activitypub import is_from_outbox
-from core.activitypub import is_local_url
-from core.db import find_one_activity
-from core.meta import MetaKey
-from core.meta import _meta
-from core.meta import by_actor
-from core.meta import by_object_id
-from core.meta import by_type
-from core.meta import flag
-from core.meta import in_inbox
-from core.meta import not_undo
-from core.meta import published_after
-from core.tasks import Tasks
+from microblogpub.config import DB
+from microblogpub.config import REPLIES_IN_STREAM
+from microblogpub.core.activitypub import is_from_outbox
+from microblogpub.core.activitypub import is_local_url
+from microblogpub.core.db import find_one_activity
+from microblogpub.core.meta import MetaKey
+from microblogpub.core.meta import _meta
+from microblogpub.core.meta import by_actor
+from microblogpub.core.meta import by_object_id
+from microblogpub.core.meta import by_type
+from microblogpub.core.meta import flag
+from microblogpub.core.meta import in_inbox
+from microblogpub.core.meta import not_undo
+from microblogpub.core.meta import published_after
+from microblogpub.core.tasks import Tasks
 
 _logger = logging.getLogger(__name__)
 

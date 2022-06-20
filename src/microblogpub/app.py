@@ -31,68 +31,68 @@ from little_boxes.webfinger import get_remote_follow_template
 from werkzeug.exceptions import InternalServerError
 from flask_talisman import Talisman
 
-import blueprints.admin
-import blueprints.indieauth
-import blueprints.tasks
-import blueprints.well_known
-import config
-from blueprints.api import _api_required
-from blueprints.api import api_required
-from blueprints.tasks import TaskError
-from config import DB
-from config import ID
-from config import ME
-from config import MEDIA_CACHE
-from config import VERSION
-from core import activitypub
-from core import feed
-from core import jsonld
-from core.activitypub import activity_from_doc
-from core.activitypub import activity_url
-from core.activitypub import post_to_inbox
-from core.activitypub import post_to_outbox
-from core.activitypub import remove_context
-from core.db import find_one_activity
-from core.meta import Box
-from core.meta import MetaKey
-from core.meta import _meta
-from core.meta import by_hashtag
-from core.meta import by_object_id
-from core.meta import by_remote_id
-from core.meta import by_type
-from core.meta import by_visibility
-from core.meta import follow_request_accepted
-from core.meta import in_inbox
-from core.meta import in_outbox
-from core.meta import is_public
-from core.meta import not_deleted
-from core.meta import not_poll_answer
-from core.meta import not_undo
-from core.meta import pinned
-from core.shared import _build_thread
-from core.shared import _get_ip
-from core.shared import activitypubify
-from core.shared import csrf
-from core.shared import htmlify
-from core.shared import is_api_request
-from core.shared import jsonify
-from core.shared import login_required
-from core.shared import noindex
-from core.shared import paginated_query
-from utils.blacklist import is_blacklisted
-from utils.emojis import EMOJIS
-from utils.highlight import HIGHLIGHT_CSS
-from utils.key import get_secret_key
-from utils.template_filters import filters
+import microblogpub.blueprints.admin
+import microblogpub.blueprints.indieauth
+import microblogpub.blueprints.tasks
+import microblogpub.blueprints.well_known
+from microblogpub import config
+from microblogpub.blueprints.api import _api_required
+from microblogpub.blueprints.api import api_required
+from microblogpub.blueprints.tasks import TaskError
+from microblogpub.config import DB
+from microblogpub.config import ID
+from microblogpub.config import ME
+from microblogpub.config import MEDIA_CACHE
+from microblogpub.config import VERSION
+from microblogpub.core import activitypub
+from microblogpub.core import feed
+from microblogpub.core import jsonld
+from microblogpub.core.activitypub import activity_from_doc
+from microblogpub.core.activitypub import activity_url
+from microblogpub.core.activitypub import post_to_inbox
+from microblogpub.core.activitypub import post_to_outbox
+from microblogpub.core.activitypub import remove_context
+from microblogpub.core.db import find_one_activity
+from microblogpub.core.meta import Box
+from microblogpub.core.meta import MetaKey
+from microblogpub.core.meta import _meta
+from microblogpub.core.meta import by_hashtag
+from microblogpub.core.meta import by_object_id
+from microblogpub.core.meta import by_remote_id
+from microblogpub.core.meta import by_type
+from microblogpub.core.meta import by_visibility
+from microblogpub.core.meta import follow_request_accepted
+from microblogpub.core.meta import in_inbox
+from microblogpub.core.meta import in_outbox
+from microblogpub.core.meta import is_public
+from microblogpub.core.meta import not_deleted
+from microblogpub.core.meta import not_poll_answer
+from microblogpub.core.meta import not_undo
+from microblogpub.core.meta import pinned
+from microblogpub.core.shared import _build_thread
+from microblogpub.core.shared import _get_ip
+from microblogpub.core.shared import activitypubify
+from microblogpub.core.shared import csrf
+from microblogpub.core.shared import htmlify
+from microblogpub.core.shared import is_api_request
+from microblogpub.core.shared import jsonify
+from microblogpub.core.shared import login_required
+from microblogpub.core.shared import noindex
+from microblogpub.core.shared import paginated_query
+from microblogpub.utils.blacklist import is_blacklisted
+from microblogpub.utils.emojis import EMOJIS
+from microblogpub.utils.highlight import HIGHLIGHT_CSS
+from microblogpub.utils.key import get_secret_key
+from microblogpub.utils.template_filters import filters
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder=config.TEMPLATE_DIR)
 app.secret_key = get_secret_key("flask")
 app.register_blueprint(filters)
-app.register_blueprint(blueprints.admin.blueprint)
-app.register_blueprint(blueprints.api.blueprint, url_prefix="/api")
-app.register_blueprint(blueprints.indieauth.blueprint)
-app.register_blueprint(blueprints.tasks.blueprint)
-app.register_blueprint(blueprints.well_known.blueprint)
+app.register_blueprint(microblogpub.blueprints.admin.blueprint)
+app.register_blueprint(microblogpub.blueprints.api.blueprint, url_prefix="/api")
+app.register_blueprint(microblogpub.blueprints.indieauth.blueprint)
+app.register_blueprint(microblogpub.blueprints.tasks.blueprint)
+app.register_blueprint(microblogpub.blueprints.well_known.blueprint)
 app.config.update(WTF_CSRF_CHECK_DEFAULT=False)
 
 app.config.update(SESSION_COOKIE_SECURE=True if config.SCHEME == "https" else False)
@@ -144,7 +144,7 @@ def inject_config():
             {**by_type(ActivityType.ANNOUNCE), **not_undo()},
         ],
     }
-    notes_count = DB.activities.count(q)
+    notes_count = DB.activities.count_documents(q)
     # FIXME(tsileo): rename to all_count, and remove poll answers from it
     all_q = {
         **in_outbox(),
@@ -180,8 +180,8 @@ def inject_config():
         microblogpub_version=VERSION,
         config=config,
         logged_in=logged_in,
-        followers_count=DB.activities.count(followers_q),
-        following_count=DB.activities.count(following_q)
+        followers_count=DB.activities.count_documents(followers_q),
+        following_count=DB.activities.count_documents(following_q)
         if logged_in or not config.HIDE_FOLLOWING
         else 0,
         notes_count=notes_count,

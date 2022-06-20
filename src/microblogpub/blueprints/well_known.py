@@ -6,10 +6,10 @@ from flask import abort
 from flask import request
 from little_boxes import activitypub as ap
 
-import config
-from config import DB
-from core.meta import Box
-from core.shared import jsonify
+from microblogpub import config
+from microblogpub.config import DB
+from microblogpub.core.meta import Box
+from microblogpub.core.shared import jsonify
 
 blueprint = flask.Blueprint("well_known", __name__)
 

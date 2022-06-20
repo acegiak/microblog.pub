@@ -5,7 +5,7 @@ from abc import abstractmethod
 from typing import List
 from typing import Type
 
-from config import DB
+from microblogpub.config import DB
 
 logger = logging.getLogger(__name__)
 

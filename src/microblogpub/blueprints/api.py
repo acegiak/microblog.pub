@@ -23,34 +23,34 @@ from little_boxes.errors import ActivityNotFoundError
 from little_boxes.errors import NotFromOutboxError
 from werkzeug.utils import secure_filename
 
-import config
-from config import ADMIN_API_KEY
-from config import BASE_URL
-from config import DB
-from config import DEBUG_MODE
-from config import ID
-from config import JWT
-from config import MEDIA_CACHE
-from config import _drop_db
-from core import feed
-from core.activitypub import accept_follow
-from core.activitypub import activity_url
-from core.activitypub import new_context
-from core.activitypub import post_to_outbox
-from core.db import update_one_activity
-from core.meta import Box
-from core.meta import MetaKey
-from core.meta import _meta
-from core.meta import by_object_id
-from core.meta import by_type
-from core.shared import MY_PERSON
-from core.shared import _Response
-from core.shared import csrf
-from core.shared import jsonify
-from core.shared import login_required
-from core.tasks import Tasks
-from utils import emojis
-from utils import now
+from microblogpub import config
+from microblogpub.config import ADMIN_API_KEY
+from microblogpub.config import BASE_URL
+from microblogpub.config import DB
+from microblogpub.config import DEBUG_MODE
+from microblogpub.config import ID
+from microblogpub.config import JWT
+from microblogpub.config import MEDIA_CACHE
+from microblogpub.config import _drop_db
+from microblogpub.core import feed
+from microblogpub.core.activitypub import accept_follow
+from microblogpub.core.activitypub import activity_url
+from microblogpub.core.activitypub import new_context
+from microblogpub.core.activitypub import post_to_outbox
+from microblogpub.core.db import update_one_activity
+from microblogpub.core.meta import Box
+from microblogpub.core.meta import MetaKey
+from microblogpub.core.meta import _meta
+from microblogpub.core.meta import by_object_id
+from microblogpub.core.meta import by_type
+from microblogpub.core.shared import MY_PERSON
+from microblogpub.core.shared import _Response
+from microblogpub.core.shared import csrf
+from microblogpub.core.shared import jsonify
+from microblogpub.core.shared import login_required
+from microblogpub.core.tasks import Tasks
+from microblogpub.utils import emojis
+from microblogpub.utils import now
 
 _logger = logging.getLogger(__name__)
 

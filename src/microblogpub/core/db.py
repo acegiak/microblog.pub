@@ -5,7 +5,7 @@ from typing import Dict
 from typing import Iterable
 from typing import Optional
 
-from config import DB
+from microblogpub.config import DB
 
 _Q = Dict[str, Any]
 _D = Dict[str, Any]

@@ -8,9 +8,9 @@ from typing import Set
 from little_boxes import activitypub as ap
 from poussetaches import PousseTaches
 
-from config import DISABLE_WEBMENTIONS
-from config import MEDIA_CACHE
-from utils import parse_datetime
+from microblogpub.config import DISABLE_WEBMENTIONS
+from microblogpub.config import MEDIA_CACHE
+from microblogpub.utils import parse_datetime
 
 p = PousseTaches(
     os.getenv("MICROBLOGPUB_POUSSETACHES_HOST", "http://localhost:7991"),

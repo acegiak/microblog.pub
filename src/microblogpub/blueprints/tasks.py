@@ -16,43 +16,43 @@ from little_boxes.errors import ActivityNotFoundError
 from little_boxes.errors import NotAnActivityError
 from requests.exceptions import HTTPError
 
-import config
-from config import DB
-from config import MEDIA_CACHE
-from core import gc
-from core.activitypub import SIG_AUTH
-from core.activitypub import Box
-from core.activitypub import _actor_hash
-from core.activitypub import _add_answers_to_question
-from core.activitypub import _cache_actor_icon
-from core.activitypub import is_from_outbox
-from core.activitypub import new_context
-from core.activitypub import post_to_outbox
-from core.activitypub import save_reply
-from core.activitypub import update_cached_actor
-from core.db import find_one_activity
-from core.db import update_one_activity
-from core.inbox import process_inbox
-from core.meta import MetaKey
-from core.meta import by_object_id
-from core.meta import by_remote_id
-from core.meta import by_type
-from core.meta import inc
-from core.meta import upsert
-from core.notifications import _NewMeta
-from core.notifications import set_inbox_flags
-from core.outbox import process_outbox
-from core.remote import track_failed_send
-from core.remote import track_successful_send
-from core.shared import MY_PERSON
-from core.shared import _Response
-from core.shared import back
-from core.shared import p
-from core.tasks import Tasks
-from utils import now
-from utils import opengraph
-from utils.media import is_video
-from utils.webmentions import discover_webmention_endpoint
+from microblogpub import config
+from microblogpub.config import DB
+from microblogpub.config import MEDIA_CACHE
+from microblogpub.core import gc
+from microblogpub.core.activitypub import SIG_AUTH
+from microblogpub.core.activitypub import Box
+from microblogpub.core.activitypub import _actor_hash
+from microblogpub.core.activitypub import _add_answers_to_question
+from microblogpub.core.activitypub import _cache_actor_icon
+from microblogpub.core.activitypub import is_from_outbox
+from microblogpub.core.activitypub import new_context
+from microblogpub.core.activitypub import post_to_outbox
+from microblogpub.core.activitypub import save_reply
+from microblogpub.core.activitypub import update_cached_actor
+from microblogpub.core.db import find_one_activity
+from microblogpub.core.db import update_one_activity
+from microblogpub.core.inbox import process_inbox
+from microblogpub.core.meta import MetaKey
+from microblogpub.core.meta import by_object_id
+from microblogpub.core.meta import by_remote_id
+from microblogpub.core.meta import by_type
+from microblogpub.core.meta import inc
+from microblogpub.core.meta import upsert
+from microblogpub.core.notifications import _NewMeta
+from microblogpub.core.notifications import set_inbox_flags
+from microblogpub.core.outbox import process_outbox
+from microblogpub.core.remote import track_failed_send
+from microblogpub.core.remote import track_successful_send
+from microblogpub.core.shared import MY_PERSON
+from microblogpub.core.shared import _Response
+from microblogpub.core.shared import back
+from microblogpub.core.shared import p
+from microblogpub.core.tasks import Tasks
+from microblogpub.utils import now
+from microblogpub.utils import og_meta
+from microblogpub.utils.media import is_video
+from microblogpub.utils.webmentions import discover_webmention_endpoint
 
 blueprint = flask.Blueprint("tasks", __name__)
 
@@ -127,7 +127,7 @@ def task_send_actor_update() -> _Response:
     return ""
 
 
-@blueprint.route("/task/fetch_og_meta", methods=["POST"])
+@blueprint.route("/task/fetch_opengraph", methods=["POST"])
 def task_fetch_og_meta() -> _Response:
     task = p.parse(flask.request)
     app.logger.info(f"task={task!r}")
@@ -137,8 +137,8 @@ def task_fetch_og_meta() -> _Response:
         app.logger.info(f"activity={activity!r}")
         if activity.has_type(ap.ActivityType.CREATE):
             note = activity.get_object()
-            links = opengraph.links_from_note(note.to_dict())
-            og_metadata = opengraph.fetch_og_metadata(config.USER_AGENT, links)
+            links = og_meta.links_from_note(note.to_dict())
+            og_metadata = og_meta.fetch_og_metadata(config.USER_AGENT, links)
             for og in og_metadata:
                 if not og.get("image"):
                     continue
@@ -392,7 +392,7 @@ def task_cache_actor() -> _Response:
         if activity.has_type(ap.ActivityType.CREATE):
             obj = activity.get_object()
             try:
-                links = opengraph.links_from_note(obj.to_dict())
+                links = og_meta.links_from_note(obj.to_dict())
                 if links:
                     Tasks.fetch_og_meta(iri)
 

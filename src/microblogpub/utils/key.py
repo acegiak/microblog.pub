@@ -1,10 +1,18 @@
 import binascii
 import os
+from pathlib import Path
 from typing import Callable
 
 from little_boxes.key import Key
 
-KEY_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "config")
+_dir_name = os.path.dirname(os.path.abspath(__file__))
+
+if Path(_dir_name, "../config").exists():
+    KEY_DIR = Path(_dir_name, "../config").absolute()
+elif Path(_dir_name, "../../config").exists():
+    KEY_DIR = Path(_dir_name, "../../config").absolute()
+else:
+    KEY_DIR = Path(Path("."), Path("config")).absolute()
 
 
 def _new_key() -> str:

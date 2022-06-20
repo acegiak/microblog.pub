@@ -13,7 +13,7 @@ from little_boxes.errors import NotAnActivityError
 from little_boxes.urlutils import check_url
 from little_boxes.urlutils import is_url_valid
 
-from .lookup import lookup
+from microblogpub.utils.lookup import lookup
 
 logger = logging.getLogger(__name__)
 

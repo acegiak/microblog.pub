@@ -15,12 +15,12 @@ from flask import session
 from flask import url_for
 from itsdangerous import BadSignature
 
-from config import DB
-from config import JWT
-from core.shared import _get_ip
-from core.shared import htmlify
-from core.shared import jsonify
-from core.shared import login_required
+from microblogpub.config import DB
+from microblogpub.config import JWT
+from microblogpub.core.shared import _get_ip
+from microblogpub.core.shared import htmlify
+from microblogpub.core.shared import jsonify
+from microblogpub.core.shared import login_required
 
 blueprint = flask.Blueprint("indieauth", __name__)
 

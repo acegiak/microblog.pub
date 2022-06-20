@@ -17,15 +17,15 @@ from little_boxes.activitypub import _to_list
 from little_boxes.errors import ActivityGoneError
 from little_boxes.errors import ActivityNotFoundError
 
-from config import BASE_URL
-from config import EMOJI_TPL
-from config import ID
-from config import MEDIA_CACHE
-from core.activitypub import _answer_key
-from utils import parse_datetime
-from utils.highlight import highlight
-from utils.media import Kind
-from utils.media import _is_img
+from microblogpub.config import BASE_URL
+from microblogpub.config import EMOJI_TPL
+from microblogpub.config import ID
+from microblogpub.config import MEDIA_CACHE
+from microblogpub.core.activitypub import _answer_key
+from microblogpub.utils import parse_datetime
+from microblogpub.utils.highlight import highlight
+from microblogpub.utils.media import Kind
+from microblogpub.utils.media import _is_img
 
 _logger = logging.getLogger(__name__)
 

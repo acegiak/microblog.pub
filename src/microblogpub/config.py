@@ -1,6 +1,8 @@
 import mimetypes
 import os
+from re import TEMPLATE
 import subprocess
+import logging
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
@@ -13,13 +15,18 @@ from little_boxes.activitypub import CTX_AS as AP_DEFAULT_CTX
 from pymongo import MongoClient
 
 import sass
-from utils.emojis import _load_emojis
-from utils.key import KEY_DIR
-from utils.key import get_key
-from utils.key import get_secret_key
-from utils.media import MediaCache
+from microblogpub.utils.emojis import _load_emojis
+from microblogpub.utils.key import KEY_DIR 
+from microblogpub.utils.key import get_key
+from microblogpub.utils.key import get_secret_key
+from microblogpub.utils.media import MediaCache
 
-ROOT_DIR = Path(__file__).parent.absolute()
+log = logging.getLogger(__name__)
+
+ROOT_DIR = Path(".").absolute()
+TEMPLATE_DIR = Path("src/templates").absolute()
+
+log.info(f"ROOT_DIR: {ROOT_DIR}")
 
 
 class ThemeStyle(Enum):
@@ -84,7 +91,7 @@ DEFAULT_CTX = [
     {"@language": "und"},
 ]
 
-SASS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sass")
+SASS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../sass")
 theme_css = f"$primary-color: {THEME_COLOR};\n"
 with open(os.path.join(SASS_DIR, f"{THEME_STYLE.value}.scss")) as f:
     theme_css += f.read()

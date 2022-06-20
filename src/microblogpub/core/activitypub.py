@@ -22,28 +22,28 @@ from little_boxes.backend import Backend
 from little_boxes.errors import ActivityGoneError
 from little_boxes.httpsig import HTTPSigAuth
 
-from config import BASE_URL
-from config import DB
-from config import DEFAULT_CTX
-from config import ID
-from config import KEY
-from config import ME
-from config import USER_AGENT
-from core.db import find_one_activity
-from core.db import update_many_activities
-from core.db import update_one_activity
-from core.meta import Box
-from core.meta import FollowStatus
-from core.meta import MetaKey
-from core.meta import by_object_id
-from core.meta import by_remote_id
-from core.meta import by_type
-from core.meta import flag
-from core.meta import inc
-from core.meta import upsert
-from core.remote import server
-from core.tasks import Tasks
-from utils import now
+from microblogpub.config import BASE_URL
+from microblogpub.config import DB
+from microblogpub.config import DEFAULT_CTX
+from microblogpub.config import ID
+from microblogpub.config import KEY
+from microblogpub.config import ME
+from microblogpub.config import USER_AGENT
+from microblogpub.core.db import find_one_activity
+from microblogpub.core.db import update_many_activities
+from microblogpub.core.db import update_one_activity
+from microblogpub.core.meta import Box
+from microblogpub.core.meta import FollowStatus
+from microblogpub.core.meta import MetaKey
+from microblogpub.core.meta import by_object_id
+from microblogpub.core.meta import by_remote_id
+from microblogpub.core.meta import by_type
+from microblogpub.core.meta import flag
+from microblogpub.core.meta import inc
+from microblogpub.core.meta import upsert
+from microblogpub.core.remote import server
+from microblogpub.core.tasks import Tasks
+from microblogpub.utils import now
 
 logger = logging.getLogger(__name__)
 
