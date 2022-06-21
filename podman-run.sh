@@ -2,6 +2,7 @@
 set +x
 
 
+source ./podman-stop.sh
 source ./scripts/deps-up.sh
 
 podman pod create \
@@ -16,8 +17,8 @@ podman run -dt --pod web \
     -e MICROBLOGPUB_POUSSETACHES_HOST=http://poussetaches.dns.podman:7991 \
     -e POUSSETACHES_AUTH_KEY=1234 \
     -e COMPOSE_PROJECT_NAME=microblogpub \
-    -v ./config:/app/config:z \
-    -v ./static:/app/static:z \
+    -v ./config:/app/config \
+    -v ./static:/app/static \
 	-v ./src/templates:/app/templates \
 	-v ./src/sass:/app/sass \
     localhost/microblogpub:latest

@@ -1,5 +1,8 @@
 __pycache__/
 data/
-data2/
-tests/
-venv*
+src/tests/
+podman-stop.sh
+podman-start.sh
+static/
+scripts/
+kubernetes/

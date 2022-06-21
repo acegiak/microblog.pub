@@ -10,9 +10,12 @@ CR_PROD_IMAGE=ghcr.io/howaboutudance/microblogpub-prod
 # used to make usable with podman
 CONT_EXEC := $(if $(shell command -v "podman"), podman, docker)
 
-reload-dev:
-	${CONT_EXEC} build . -t ${MICROBLOGPUB_IMAGE}
-	docker-compose -f docker-compose-dev.yml up -d --force-recreate
+start-deps:
+	./scripts/deps-up.sh
+
+reload-deps:
+	./scripts/deps-dn.sh
+	./scripts/deps-up.sh
 
 # Build the microblogpub Docker image
 .PHONY: microblogpub
@@ -33,19 +36,21 @@ css:
 	if [[ ! -d static/twemoji ]]; then curl -L https://github.com/twitter/twemoji/archive/v12.1.6.tar.gz | tar xzf - && mv twemoji-12.1.6/assets/svg static/twemoji && rm -rf twemoji-12.1.6; fi
 
 # Run the docker-compose project locally (will perform a update if the project is already running)
+# TODO: replace images urls with docker.io
+# TODO: build custom image of poussetaches
 .PHONY: run
 run: microblogpub css
-	# (poussetaches and microblogpub Docker image will updated)
-	# Update MongoDB
 	${CONT_EXEC} pull mongo:3
 	${CONT_EXEC} pull poussetaches/poussetaches
-	# Restart the project
-	docker-compose stop
-	docker-compose up -d --force-recreate --build
+	./podman-run.sh
 
+.PHONY: stop
+stop:
+	./podman-stop.sh
+
+# dev is for running the environment locally
 .PHONY: dev
-dev: microblogpub-dev css
-	./scripts/deps-up.sh
+dev: | css reload-deps microblogpub-dev
 
 # publish-image pushes image to container reigstry(cr), assume CONT_EXEC is
 # authenecticated against cr
