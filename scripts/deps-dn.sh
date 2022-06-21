@@ -1,12 +1,9 @@
 #!/bin/bash
+
 set +x
 
-if podman network exists microblogpub-network; then
-    podman pod kill mongo
-    podman pod kill poussetaches
-    podman pod rm mongo 
-    podman pod rm poussetaches 
-    podman network rm microblogpub-network
+if command -v "podman"; then
+    source scripts/podman-deps-dn.sh
 else
-    echo "microblogpub-network does not exists... exiting..."
+    docker-compose dn
 fi

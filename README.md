@@ -15,10 +15,6 @@
 
 ## Notes
 
-From [@tsileo](https://github.com/tsileo):
-
-**Still in early development/I do not recommend to run an instance yet.**
-
 From [@howaboutudance](https://github.com/howaboutudance):
 
 very much a WIP as a personal project, filing issues on my personal repo and
@@ -72,7 +68,7 @@ If you wanna help, check out the issue tracker and email via the address on
 
 Remember that _microblog.pub_ is still in early development.
 
-The easiest and recommended way to run _microblog.pub_ in production is to use the provided docker-compose config.
+--The easiest and recommended way to run _microblog.pub_ in production is to use the provided docker-compose config--.
 
 First install [Docker](https://docs.docker.com/install/) and [Docker Compose](https://docs.docker.com/compose/install/).
 Python is not needed on the host system.
@@ -92,8 +88,7 @@ Once the initial configuration is done, you can still tweak the config by editin
 
 ### Deployment 
 - [Docker Compose Deployment][dockerconfig]
-- [Kubernetes Setup & Deployment][kubeconfig]
-
+- Podman Deployment (TODO)
 
 ### Backup
 
@@ -103,19 +98,37 @@ It should be safe to copy the directory while the Docker compose project is runn
 
 ## Development
 
-The project requires Python3.7+.
+The project requires Python3.10.
 
-The most convenient way to hack on _microblog.pub_ is to run the Python server on the host directly, and evetything else in Docker.
+The most convenient way to hack on _microblog.pub_ is to run the Python server
+on the host directly, and evetything else in Docker (or Podman).
 
+In a brea from what @tsileo had developed, this repo has been refactored to:
+- Use poetry to handle builds and depdendency management
+- refactored into a python package format (using `/src` tree structure) to make it easier to build in a container
+- Upgraded to be focus on Python 3.10
+
+To start a development environment
 ```shell
-# One-time setup (in a new virtual env)
-$ pip install -r requirements.txt
-# Start MongoDB and poussetaches
-$ make poussetaches
-$ env POUSSETACHES_AUTH_KEY="<secret-key>" docker-compose -f docker-compose-dev.yml up -d
-# Run the server locally
-$ FLASK_DEBUG=1 MICROBLOGPUB_DEBUG=1 FLASK_APP=app.py POUSSETACHES_AUTH_KEY="<secret-key>" flask run -p 5005 --with-threads
+# install poetry
+pip install poetry
+
+# initialize a poetry environment
+poetry install
+
+# start a poetry shell
+poetry shell
+
+# start dependency containers
+make start-deps
+
+# run the tests
+make test
 ```
+
+If the tests run, at the moment, you know a basic  Flask app can be started.
+
+To interact with 
 
 
 ## Contributions

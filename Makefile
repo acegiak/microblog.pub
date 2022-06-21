@@ -7,6 +7,7 @@ PWD=$(shell pwd)
 #FIXME change url if using functionality
 CR_DEV_IMAGE=ghcr.io/howaboutudance/microblogpub-dev
 CR_PROD_IMAGE=ghcr.io/howaboutudance/microblogpub-prod
+
 # used to make usable with podman
 CONT_EXEC := $(if $(shell command -v "podman"), podman, docker)
 
