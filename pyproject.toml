@@ -33,6 +33,8 @@ little-boxes = {git = "https://github.com/howaboutudance/little-boxes.git", rev 
 poussetaches = "^0.2.0"
 opengraph = {git = "https://github.com/erikriver/opengraph.git"}
 pytest-env = "^0.6.2"
+coverage = "^6.4.1"
+pytest-cov = "^3.0.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2"
@@ -62,7 +64,7 @@ src_paths=["src/microblog.pub", "src/tests"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "-ra -q"
+addopts = "-ra -q --cov=microblogpub"
 markers =  [
     "integration",
     ]
