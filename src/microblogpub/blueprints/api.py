@@ -9,6 +9,8 @@ from shutil import copyfileobj
 from typing import Any
 from typing import List
 
+import re
+
 import flask
 from bson.objectid import ObjectId
 from flask import abort
@@ -442,6 +444,7 @@ def api_remove_from_list() -> _Response:
     return _user_api_response()
 
 
+@blueprint.route("/new_article", methods=["POST", "GET"])  # noqa: C901 too complex
 @blueprint.route("/new_note", methods=["POST", "GET"])  # noqa: C901 too complex
 @api_required
 def api_new_note() -> _Response:
@@ -451,6 +454,7 @@ def api_new_note() -> _Response:
     elif request.method == "GET":
         abort(405)
 
+    title = None
     source = None
     summary = None
     location = None
@@ -498,6 +502,9 @@ def api_new_note() -> _Response:
         # Try to parse the name as summary if the payload is POSTed using form-data
         if summary is None:
             summary = _user_api_arg("name", default=None)
+
+    if title is None:
+        title = _user_api_arg("title", default=None)
 
     # This step will also parse content from Micropub request
     if source is None:
@@ -563,12 +570,21 @@ def api_new_note() -> _Response:
         if tag["type"] == "Mention":
             to.append(tag["href"])
 
+    slug = None
+
+    if title is None:
+        title = ""
+    else:
+        slug = re.sub("(^-|-$)","",re.sub("\W+","-",title.lower()))
+
     raw_note = dict(
         attributedTo=MY_PERSON.id,
         cc=list(set(cc) - set([MY_PERSON.id])),
         to=list(set(to) - set([MY_PERSON.id])),
         summary=summary,
         content=content,
+        title=title,
+        slug=slug,
         tag=tags,
         source={"mediaType": "text/markdown", "content": source},
         inReplyTo=reply.id if reply else None,
@@ -579,11 +595,11 @@ def api_new_note() -> _Response:
         raw_note["location"] = location
 
     if request.files:
-        for f in request.files.keys():
-            if not request.files[f].filename:
+        raw_note["attachment"] = []
+        app.logger.info("attachments recieved: %", request.files)
+        for file in request.files.getlist('files[]'):
+            if not file.filename or len(file.filename) < 1:
                 continue
-
-            file = request.files[f]
             rfilename = secure_filename(file.filename)
             with BytesIO() as buf:
                 # bypass file.save(), because it can't save to a file-like object
@@ -591,14 +607,14 @@ def api_new_note() -> _Response:
                 oid = MEDIA_CACHE.save_upload(buf, rfilename)
             mtype = mimetypes.guess_type(rfilename)[0]
 
-            raw_note["attachment"] = [
-                {
+            dataobject = {
                     "mediaType": mtype,
                     "name": _user_api_arg("file_description", default=rfilename),
                     "type": "Document",
                     "url": f"{BASE_URL}/uploads/{oid}/{rfilename}",
-                }
-            ]
+            }
+            app.logger.info("uploaded attachement: %",dataobject)
+            raw_note["attachment"].append(dataobject)
 
     note = ap.Note(**raw_note)
     create = note.build_create()

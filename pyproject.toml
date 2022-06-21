@@ -1,10 +1,12 @@
 [tool.poetry]
 name = "microblogpub"
-version = "0.2.0"
+version = "0.4.0"
 description = ""
 authors = [
     "Thomas Sileo <contact@thomassileo.name>",
-    "Michael Penhallegon <mike@hematite.tech>"]
+    "Michael Penhallegon <mike@hematite.tech>",
+    "Ashton McAllan  <acegiak@gmail.com>"
+    ]
 
 [tool.poetry.dependencies]
 python = "^3.10"

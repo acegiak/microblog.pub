@@ -35,7 +35,7 @@ dt, dd { font-size: 0.9em; }
 <ul id="admin-menu">
 <li class="left"><a href="/admin" class="admin-title{% if request.path.startswith("/admin") %} selected{% endif %}">Admin</a></li>
 <li class="left"><a href="/" class="admin-title {% if not request.path.startswith("/admin") %} selected{% endif %}">Public</a></li>
-<li class="left"><a href="/admin/new"{% if request.path == "/admin/new" %} class="selected" {% endif %}>New</a></li>
+<li class="left"><a href="/admin/new?type=note"{% if request.path == "/admin/new" %} class="selected" {% endif %}>New</a></li>
 <li class="left"><a href="/admin/stream"{% if request.path == "/admin/stream" %} class="selected" {% endif %}>Stream</a></li>
 <li class="left"><a href="/admin/notifications"{% if request.path == "/admin/notifications" %} class="selected" {% endif %}>Notifications 
  {% if unread_notifications_count %}
