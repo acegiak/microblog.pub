@@ -1,7 +1,5 @@
 import mimetypes
 import os
-from re import TEMPLATE
-import subprocess
 import logging
 from datetime import datetime
 from enum import Enum
@@ -16,7 +14,7 @@ from pymongo import MongoClient
 
 import sass
 from microblogpub.utils.emojis import _load_emojis
-from microblogpub.utils.key import KEY_DIR 
+from microblogpub.utils.key import KEY_DIR
 from microblogpub.utils.key import get_key
 from microblogpub.utils.key import get_secret_key
 from microblogpub.utils.media import MediaCache
@@ -26,7 +24,8 @@ log = logging.getLogger(__name__)
 ROOT_DIR = Path(".").absolute()
 
 if int(os.environ.get("MICROBLOGPUBDEV")) == 1:
-    SASS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../sass")
+    SASS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                            "../sass")
     TEMPLATE_DIR = Path("src/templates").absolute()
 else:
     TEMPLATE_DIR = Path("./templates").absolute()
@@ -88,7 +87,8 @@ with open(os.path.join(KEY_DIR, "me.yml")) as f:
     # Theme-related config
     theme_conf = conf.get("theme", {})
     THEME_STYLE = ThemeStyle(theme_conf.get("style", DEFAULT_THEME_STYLE))
-    THEME_COLOR = theme_conf.get("color", DEFAULT_THEME_PRIMARY_COLOR[THEME_STYLE])
+    THEME_COLOR = theme_conf.get("color",
+                                 DEFAULT_THEME_PRIMARY_COLOR[THEME_STYLE])
 
 
 DEFAULT_CTX = [
@@ -149,7 +149,8 @@ if PROFILE_METADATA:
             {"type": "PropertyValue", "name": key, "value": linkify(value)}
         )
 
-MANUALLY_APPROVES_FOLLOWERS = bool(conf.get("manually_approves_followers", False))
+MANUALLY_APPROVES_FOLLOWERS = bool(
+    conf.get("manually_approves_followers", False))
 
 ME = {
     "@context": DEFAULT_CTX,
@@ -182,7 +183,9 @@ if conf.get("emojis"):
     EMOJIS = conf["emojis"]
 
 # Emoji template for the FE
-EMOJI_TPL = '<img src="/static/twemoji/{filename}.svg" alt="{raw}" class="emoji">'
+EMOJI_TPL = """
+    <img src="/static/twemoji/{filename}.svg" alt="{raw}" class="emoji">
+    """.strip()
 if conf.get("emoji_tpl"):
     EMOJI_TPL = conf["emoji_tpl"]
 
@@ -195,11 +198,14 @@ DISABLE_WEBMENTIONS = bool(conf.get("disable_webmentions", False))
 # Whether replies should be displayed in the stream or not
 REPLIES_IN_STREAM = bool(conf.get("replies_in_stream", False))
 
-# By default, we keep 14 of inbox data ; outbox is kept forever (along with bookmarked stuff, outbox replies, liked...)
+# By default, we keep 14 of inbox data ; outbox is kept forever (along with
+# bookmarked stuff, outbox replies, liked...)
 DAYS_TO_KEEP = int(conf.get("days_to_keep", 32))
 
 # URL link to source code
-SOURCECODE_URL = conf.get("sourcecode_url", "https://github.com/tsileo/microblog.pub")
+SOURCECODE_URL = conf.get(
+                          "sourcecode_url",
+                          "https://github.com/tsileo/microblog.pub")
 
 # Load custom emojis (stored in static/emojis)
 _load_emojis(ROOT_DIR, BASE_URL)
