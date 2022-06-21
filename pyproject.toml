@@ -2,7 +2,9 @@
 name = "microblogpub"
 version = "0.2.0"
 description = ""
-authors = ["Michael Penhallegon <mike@hematite.tech>"]
+authors = [
+    "Thomas Sileo <contact@thomassileo.name>",
+    "Michael Penhallegon <mike@hematite.tech>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
