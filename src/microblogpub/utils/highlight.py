@@ -1,12 +1,11 @@
 from functools import lru_cache
 
 from bs4 import BeautifulSoup
+from microblogpub.config import THEME_STYLE
+from microblogpub.config import ThemeStyle
 from pygments import highlight as phighlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import guess_lexer
-
-from microblogpub.config import THEME_STYLE
-from microblogpub.config import ThemeStyle
 
 _FORMATTER = HtmlFormatter(
     style="default" if THEME_STYLE == ThemeStyle.LIGHT else "vim"

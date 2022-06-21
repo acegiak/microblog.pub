@@ -16,7 +16,6 @@ from little_boxes import activitypub as ap
 from little_boxes.activitypub import _to_list
 from little_boxes.errors import ActivityGoneError
 from little_boxes.errors import ActivityNotFoundError
-
 from microblogpub.config import BASE_URL
 from microblogpub.config import EMOJI_TPL
 from microblogpub.config import ID

@@ -14,8 +14,6 @@ from little_boxes.activitypub import _to_list
 from little_boxes.errors import ActivityGoneError
 from little_boxes.errors import ActivityNotFoundError
 from little_boxes.errors import NotAnActivityError
-from requests.exceptions import HTTPError
-
 from microblogpub import config
 from microblogpub.config import DB
 from microblogpub.config import MEDIA_CACHE
@@ -53,6 +51,7 @@ from microblogpub.utils import now
 from microblogpub.utils import og_meta
 from microblogpub.utils.media import is_video
 from microblogpub.utils.webmentions import discover_webmention_endpoint
+from requests.exceptions import HTTPError
 
 blueprint = flask.Blueprint("tasks", __name__)
 

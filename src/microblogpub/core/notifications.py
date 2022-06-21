@@ -7,7 +7,6 @@ from typing import Any
 from typing import Dict
 
 from little_boxes import activitypub as ap
-
 from microblogpub.config import DB
 from microblogpub.config import REPLIES_IN_STREAM
 from microblogpub.core.activitypub import is_from_outbox

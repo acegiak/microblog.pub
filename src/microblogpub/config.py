@@ -1,23 +1,22 @@
+import logging
 import mimetypes
 import os
-import logging
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
 
+import sass
 import yaml
 from bleach import linkify
 from itsdangerous import JSONWebSignatureSerializer
 from little_boxes import strtobool
 from little_boxes.activitypub import CTX_AS as AP_DEFAULT_CTX
-from pymongo import MongoClient
-
-import sass
 from microblogpub.utils.emojis import _load_emojis
 from microblogpub.utils.key import KEY_DIR
 from microblogpub.utils.key import get_key
 from microblogpub.utils.key import get_secret_key
 from microblogpub.utils.media import MediaCache
+from pymongo import MongoClient
 
 log = logging.getLogger(__name__)
 

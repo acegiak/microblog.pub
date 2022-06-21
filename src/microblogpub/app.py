@@ -6,6 +6,10 @@ from datetime import datetime
 from typing import Any
 from uuid import uuid4
 
+import microblogpub.blueprints.admin
+import microblogpub.blueprints.indieauth
+import microblogpub.blueprints.tasks
+import microblogpub.blueprints.well_known
 import requests
 from bson.errors import InvalidId
 from bson.objectid import ObjectId
@@ -18,6 +22,7 @@ from flask import render_template
 from flask import request
 from flask import session
 from flask import url_for
+from flask_talisman import Talisman
 from gridfs.errors import NoFile
 from itsdangerous import BadSignature
 from little_boxes import activitypub as ap
@@ -28,13 +33,6 @@ from little_boxes.errors import ActivityGoneError
 from little_boxes.errors import Error
 from little_boxes.httpsig import verify_request
 from little_boxes.webfinger import get_remote_follow_template
-from werkzeug.exceptions import InternalServerError
-from flask_talisman import Talisman
-
-import microblogpub.blueprints.admin
-import microblogpub.blueprints.indieauth
-import microblogpub.blueprints.tasks
-import microblogpub.blueprints.well_known
 from microblogpub import config
 from microblogpub.blueprints.api import _api_required
 from microblogpub.blueprints.api import api_required
@@ -84,6 +82,7 @@ from microblogpub.utils.emojis import EMOJIS
 from microblogpub.utils.highlight import HIGHLIGHT_CSS
 from microblogpub.utils.key import get_secret_key
 from microblogpub.utils.template_filters import filters
+from werkzeug.exceptions import InternalServerError
 
 app = Flask(__name__, template_folder=config.TEMPLATE_DIR)
 app.secret_key = get_secret_key("flask")

@@ -15,8 +15,6 @@ from flask import session
 from flask import url_for
 from flask_wtf.csrf import CSRFProtect
 from little_boxes import activitypub as ap
-from poussetaches import PousseTaches
-
 from microblogpub import config
 from microblogpub.core import activitypub
 from microblogpub.core.db import find_activities
@@ -25,6 +23,7 @@ from microblogpub.core.meta import by_object_id
 from microblogpub.core.meta import by_type
 from microblogpub.core.meta import flag
 from microblogpub.core.meta import not_deleted
+from poussetaches import PousseTaches
 
 # _Response = Union[flask.Response, werkzeug.wrappers.Response, str, Any]
 _Response = Any

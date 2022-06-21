@@ -5,7 +5,6 @@ import flask
 from flask import abort
 from flask import request
 from little_boxes import activitypub as ap
-
 from microblogpub import config
 from microblogpub.config import DB
 from microblogpub.core.meta import Box

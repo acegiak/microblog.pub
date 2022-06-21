@@ -5,7 +5,6 @@ from typing import Optional
 from feedgen.feed import FeedGenerator
 from html2text import html2text
 from little_boxes import activitypub as ap
-
 from microblogpub.config import ID
 from microblogpub.config import ME
 from microblogpub.config import USERNAME

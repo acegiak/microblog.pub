@@ -5,7 +5,6 @@ from typing import Dict
 
 from little_boxes import activitypub as ap
 from little_boxes.errors import NotAnActivityError
-
 from microblogpub import config
 from microblogpub.core.activitypub import _answer_key
 from microblogpub.core.activitypub import accept_follow
