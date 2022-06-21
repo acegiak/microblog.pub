@@ -6,6 +6,7 @@ static/media/*
 static/twemoji/*
 static/pure.css
 .env
+.tox
 venv*
 kubernetes/deploy
 kubernetes/deploy*.yaml
@@ -19,3 +20,4 @@ __pycache__/
 
 # Ignore Gradle build output directory
 build
+.coverage

@@ -1,7 +1,0 @@
--r test.txt
-git+https://github.com/tsileo/little-boxes.git
-html2text
-pyyaml
-flake8
-ipython
-ipdb
