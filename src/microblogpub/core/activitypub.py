@@ -21,7 +21,6 @@ from little_boxes.activitypub import format_datetime
 from little_boxes.backend import Backend
 from little_boxes.errors import ActivityGoneError
 from little_boxes.httpsig import HTTPSigAuth
-
 from microblogpub.config import BASE_URL
 from microblogpub.config import DB
 from microblogpub.config import DEFAULT_CTX

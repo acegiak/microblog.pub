@@ -4,7 +4,6 @@ from typing import Dict
 from urllib.parse import urlparse
 
 from little_boxes import activitypub as ap
-
 from microblogpub.config import ID
 from microblogpub.core import activitypub
 from microblogpub.core.db import DB

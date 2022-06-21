@@ -2,7 +2,9 @@
 name = "microblogpub"
 version = "0.2.0"
 description = ""
-authors = ["Michael Penhallegon <mike@hematite.tech>"]
+authors = [
+    "Thomas Sileo <contact@thomassileo.name>",
+    "Michael Penhallegon <mike@hematite.tech>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -32,7 +34,6 @@ pymongo = "^4.1.1"
 little-boxes = {git = "https://github.com/howaboutudance/little-boxes.git", rev = "96c67a9"}
 poussetaches = "^0.2.0"
 opengraph = {git = "https://github.com/erikriver/opengraph.git"}
-pytest-env = "^0.6.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2"
@@ -43,6 +44,10 @@ mypy = "^0.910"
 ipdb = "^0.13.9"
 ipython = "^7.30.0"
 flake8 = "^4.0.1"
+isort = "^5.10.1"
+pytest-env = "^0.6.2"
+coverage = "^6.4.1"
+pytest-cov = "^3.0.0"
 
 [tool.mypy]
 python_version="3.8"
@@ -62,7 +67,7 @@ src_paths=["src/microblog.pub", "src/tests"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "-ra -q"
+addopts = "-ra -q --cov=microblogpub"
 markers =  [
     "integration",
     ]

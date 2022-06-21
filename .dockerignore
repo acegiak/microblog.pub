@@ -6,3 +6,4 @@ podman-start.sh
 static/
 scripts/
 kubernetes/
+.coverage

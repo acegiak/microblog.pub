@@ -9,7 +9,6 @@ from typing import List
 from little_boxes import activitypub as ap
 from little_boxes.errors import ActivityGoneError
 from little_boxes.errors import RemoteServerUnavailableError
-
 from microblogpub.config import DAYS_TO_KEEP
 from microblogpub.config import ID
 from microblogpub.config import ME

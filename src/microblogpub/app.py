@@ -6,6 +6,10 @@ from datetime import datetime
 from typing import Any
 from uuid import uuid4
 
+import microblogpub.blueprints.admin
+import microblogpub.blueprints.indieauth
+import microblogpub.blueprints.tasks
+import microblogpub.blueprints.well_known
 import requests
 from bson.errors import InvalidId
 from bson.objectid import ObjectId
@@ -18,6 +22,7 @@ from flask import render_template
 from flask import request
 from flask import session
 from flask import url_for
+from flask_talisman import Talisman
 from gridfs.errors import NoFile
 from itsdangerous import BadSignature
 from little_boxes import activitypub as ap
@@ -28,13 +33,6 @@ from little_boxes.errors import ActivityGoneError
 from little_boxes.errors import Error
 from little_boxes.httpsig import verify_request
 from little_boxes.webfinger import get_remote_follow_template
-from werkzeug.exceptions import InternalServerError
-from flask_talisman import Talisman
-
-import microblogpub.blueprints.admin
-import microblogpub.blueprints.indieauth
-import microblogpub.blueprints.tasks
-import microblogpub.blueprints.well_known
 from microblogpub import config
 from microblogpub.blueprints.api import _api_required
 from microblogpub.blueprints.api import api_required
@@ -84,37 +82,44 @@ from microblogpub.utils.emojis import EMOJIS
 from microblogpub.utils.highlight import HIGHLIGHT_CSS
 from microblogpub.utils.key import get_secret_key
 from microblogpub.utils.template_filters import filters
+from werkzeug.exceptions import InternalServerError
 
 app = Flask(__name__, template_folder=config.TEMPLATE_DIR)
 app.secret_key = get_secret_key("flask")
 app.register_blueprint(filters)
 app.register_blueprint(microblogpub.blueprints.admin.blueprint)
-app.register_blueprint(microblogpub.blueprints.api.blueprint, url_prefix="/api")
-app.register_blueprint(microblogpub.blueprints.indieauth.blueprint)
-app.register_blueprint(microblogpub.blueprints.tasks.blueprint)
-app.register_blueprint(microblogpub.blueprints.well_known.blueprint)
+app.register_blueprint(
+    microblogpub.blueprints.api.blueprint, url_prefix="/api")
+app.register_blueprint(
+    microblogpub.blueprints.indieauth.blueprint)
+app.register_blueprint(
+    microblogpub.blueprints.tasks.blueprint)
+app.register_blueprint(
+    microblogpub.blueprints.well_known.blueprint)
 app.config.update(WTF_CSRF_CHECK_DEFAULT=False)
 
-app.config.update(SESSION_COOKIE_SECURE=True if config.SCHEME == "https" else False)
+if config.SCHEME == "https":
+    app.config.update(SESSION_COOKIE_SECURE=True)
+else:
+    app.comfig.update(SESSION_COOKIE_SECURE=False)
 
 
 csp = {
-	'default-src': '\'self\'',
-	'script-src': '\'self\'',
-	'style-src': ['\'self\'', "'unsafe-inline'"],
-	'object-src': "'none'",
-	'base-uri': "'none'",
-	# 'require-trusted-types-for': "'script'",
+    'default-src': '\'self\'',
+    'script-src': '\'self\'',
+    'style-src': ['\'self\'', "'unsafe-inline'"],
+    'object-src': "'none'",
+    'base-uri': "'none'",
+    # 'require-trusted-types-for': "'script'",
 }
 
 csrf.init_app(app)
 talisman = Talisman(
         app,
         content_security_policy=csp,
-	content_security_policy_nonce_in=['script-src'],
+        content_security_policy_nonce_in=['script-src'],
         force_https=False,
         )
-
 
 
 logger = logging.getLogger(__name__)
@@ -211,7 +216,8 @@ def set_x_powered_by(response):
 @app.errorhandler(ValueError)
 def handle_value_error(error):
     logger.error(
-        f"caught value error for {g.request_id}: {error!r}, {traceback.format_tb(error.__traceback__)}"
+        f"caught value error for {g.request_id}: {error!r}, "
+        + f"{traceback.format_tb(error.__traceback__)}"
     )
     response = jsonify({"message": error.args[0], "request_id": g.request_id})
     response.status_code = 400
@@ -221,7 +227,8 @@ def handle_value_error(error):
 @app.errorhandler(Error)
 def handle_activitypub_error(error):
     logger.error(
-        f"caught activitypub error for {g.request_id}: {error!r}, {traceback.format_tb(error.__traceback__)}"
+        f"caught activitypub error for {g.request_id}: {error!r}, "
+        + f"{traceback.format_tb(error.__traceback__)}"
     )
     response = jsonify({**error.to_dict(), "request_id": g.request_id})
     response.status_code = error.status_code
@@ -231,9 +238,13 @@ def handle_activitypub_error(error):
 @app.errorhandler(TaskError)
 def handle_task_error(error):
     logger.error(
-        f"caught activitypub error for {g.request_id}: {error!r}, {traceback.format_tb(error.__traceback__)}"
+        f"caught activitypub error for {g.request_id}: {error!r}, "
+        + f"{traceback.format_tb(error.__traceback__)}"
     )
-    response = jsonify({"traceback": error.message, "request_id": g.request_id})
+    response = jsonify({
+        "traceback": error.message,
+        "request_id": g.request_id
+    })
     response.status_code = 500
     return response
 
@@ -250,16 +261,6 @@ def handle_500(e):
     )
 
 
-# @app.errorhandler(Exception)
-# def handle_other_error(error):
-#    logger.error(
-#        f"caught error {error!r}, {traceback.format_tb(error.__traceback__)}"
-#    )
-#    response = flask_jsonify({})
-#    response.status_code = 500
-#    return response
-
-
 def _log_sig():
     sig = request.headers.get("Signature")
     if sig:
@@ -269,7 +270,8 @@ def _log_sig():
                 request.method, request.path, request.headers, None
             )
             app.logger.info(
-                f"authenticated fetch: {req_verified}: {actor_id} {request.headers}"
+                f"authenticated fetch: {req_verified}: {actor_id} "
+                + f"{request.headers}"
             )
         except Exception:
             app.logger.exception("failed to verify authenticated fetch")
@@ -288,7 +290,9 @@ Disallow: /uploads/"""
 
 @app.route("/robots.txt")
 def robots_txt():
-    return Response(response=ROBOTS_TXT, headers={"Content-Type": "text/plain"})
+    return Response(
+        response=ROBOTS_TXT,
+        headers={"Content-Type": "text/plain"})
 
 
 @app.route("/microblogpub-0.1.jsonld")
@@ -307,7 +311,9 @@ def proxy(scheme: str, url: str) -> Any:
     req_headers = {
         k: v
         for k, v in dict(request.headers).items()
-        if k.lower() not in ["host", "cookie", "", "x-forwarded-for", "x-real-ip"]
+        if k.lower() not in [
+            "host", "cookie", "", "x-forwarded-for", "x-real-ip"
+        ]
         and not k.lower().startswith("broxy-")
     }
     # req_headers["Host"] = urlparse(url).netloc
@@ -343,7 +349,8 @@ def serve_media(media_id):
     except (InvalidId, NoFile):
         abort(404)
 
-    resp = app.response_class(f, direct_passthrough=True, mimetype=f.content_type)
+    resp = app.response_class(f, direct_passthrough=True,
+                              mimetype=f.content_type)
     resp.headers.set("Content-Length", f.length)
     resp.headers.set("ETag", f.md5)
     resp.headers.set(
@@ -361,7 +368,8 @@ def serve_uploads(oid, fname):
     except (InvalidId, NoFile):
         abort(404)
 
-    resp = app.response_class(f, direct_passthrough=True, mimetype=f.content_type)
+    resp = app.response_class(f, direct_passthrough=True,
+                              mimetype=f.content_type)
     resp.headers.set("Content-Length", f.length)
     resp.headers.set("ETag", f.md5)
     resp.headers.set(
@@ -402,7 +410,8 @@ def index():
                 **by_type(ActivityType.CREATE),
                 **not_deleted(),
                 **by_visibility(ap.Visibility.PUBLIC),
-                "$or": [{"meta.pinned": False}, {"meta.pinned": {"$exists": False}}],
+                "$or": [{"meta.pinned": False},
+                        {"meta.pinned": {"$exists": False}}],
             },
             {**by_type(ActivityType.ANNOUNCE), **not_undo()},
         ],
@@ -410,7 +419,9 @@ def index():
 
     apinned = []
     # Only fetch the pinned notes if we're on the first page
-    if not request.args.get("older_than") and not request.args.get("newer_than"):
+    if ((not request.args.get("older_than"))
+            and (not request.args.get("newer_than"))):
+
         q_pinned = {
             **in_outbox(),
             **by_type(ActivityType.CREATE),
@@ -527,7 +538,8 @@ def outbox():
         if not is_api_request():
             abort(404)
         _log_sig()
-        # TODO(tsileo): returns the whole outbox if authenticated and look at OCAP support
+        # TODO(tsileo): returns the whole outbox if authenticated and look at
+        #               OCAP support
         q = {
             **in_outbox(),
             "$or": [
@@ -565,7 +577,8 @@ def outbox():
 @app.route("/emoji/<name>")
 def ap_emoji(name):
     if name in EMOJIS:
-        return activitypubify(**{**EMOJIS[name], "@context": config.DEFAULT_CTX})
+        return activitypubify(**{**EMOJIS[name],
+                              "@context": config.DEFAULT_CTX})
     abort(404)
 
 
@@ -784,28 +797,35 @@ def inbox():
         logger.info(f"request_id={g.request_id} signed by {actor_id}")
     except Exception:
         logger.exception(
-            f"failed to verify request {g.request_id}, trying to verify the payload by fetching the remote"
+            f"failed to verify request {g.request_id}, "
+            + "trying to verify the payload by fetching the remote"
         )
         try:
             remote_data = get_backend().fetch_iri(data["id"])
         except ActivityGoneError:
-            # XXX Mastodon sends Delete activities that are not dereferencable, it's the actor url with #delete
-            # appended, so an `ActivityGoneError` kind of ensure it's "legit"
-            if data["type"] == ActivityType.DELETE.value and data["id"].startswith(
-                data["object"]
-            ):
-                # If we're here, this means the key is not saved, so we cannot verify the object
-                logger.info(f"received a Delete for an unknown actor {data!r}, drop it")
+            # XXX Mastodon sends Delete activities that are not dereferencable,
+            # it's the actor url with #delete appended, so an
+            # `ActivityGoneError` kind of ensure it's "legit"
+            if data["type"] == (ActivityType.DELETE.value and
+                                data["id"].startswith(
+                                    data["object"])
+                                ):
+                # If we're here, this means the key is not saved, so we cannot
+                # verify the object
+                logger.info(f"received a Delete for an unknown actor {data!r}"
+                            + ", drop it")
 
                 return Response(status=201)
         except Exception:
             logger.exception(f"failed to fetch remote for payload {data!r}")
 
             if "type" in data:
-                # Friendica does not returns a 410, but a 302 that redirect to an HTML page
+                # Friendica does not returns a 410, but a 302 that redirect to
+                # an HTML page
                 if ap._has_type(data["type"], ActivityType.DELETE):
                     logger.info(
-                        f"received a Delete for an unknown actor {data!r}, drop it"
+                        f"received a Delete for an unknown actor {data!r}, "
+                        + "drop it"
                     )
                     return Response(status=201)
 
@@ -817,7 +837,7 @@ def inbox():
                         headers={"Content-Type": "application/json"},
                         response=json.dumps(
                             {
-                                "error": "failed to verify request (using HTTP signatures or fetching the IRI)",
+                                "error": "failed to verify request (using HTTP signatures or fetching the IRI)",  # noqa E501
                                 "request_id": g.request_id,
                             }
                         ),
@@ -847,7 +867,8 @@ def inbox():
                 headers={"Content-Type": "application/json"},
                 response=json.dumps(
                     {
-                        "error": "failed to verify request (using HTTP signatures or fetching the IRI)",
+                        "error": "failed to verify request (using HTTP"
+                                 + "signatures or fetching the IRI)",
                         "request_id": g.request_id,
                     }
                 ),
@@ -858,7 +879,8 @@ def inbox():
     try:
         activity = ap.parse_activity(data)
     except ValueError:
-        logger.exception("failed to parse activity for req {g.request_id}: {data!r}")
+        logger.exception("failed to parse activity for req {g.request_id}: "
+                         + "{data!r}")
 
         # Track/store the payload for analysis
         ip, geoip = _get_ip()
@@ -888,7 +910,9 @@ def inbox():
 
 @app.route("/followers")
 def followers():
-    q = {"box": Box.INBOX.value, "type": ActivityType.FOLLOW.value, "meta.undo": False}
+    q = {"box": Box.INBOX.value,
+         "type": ActivityType.FOLLOW.value,
+         "meta.undo": False}
 
     if is_api_request():
         _log_sig()
@@ -903,7 +927,10 @@ def followers():
         )
 
     raw_followers, older_than, newer_than = paginated_query(DB.activities, q)
-    followers = [doc["meta"] for doc in raw_followers if "actor" in doc.get("meta", {})]
+    followers = [
+        doc["meta"]
+        for doc in raw_followers if "actor" in doc.get("meta", {})
+    ]
     return htmlify(
         render_template(
             "followers.html",
@@ -1019,7 +1046,10 @@ def featured():
         "meta.undo": False,
         "meta.pinned": True,
     }
-    data = [clean_activity(doc["activity"]["object"]) for doc in DB.activities.find(q)]
+    data = [
+        clean_activity(doc["activity"]["object"])
+        for doc in DB.activities.find(q)
+    ]
     return activitypubify(
         **activitypub.simple_build_ordered_collection("featured", data)
     )
@@ -1040,11 +1070,14 @@ def liked():
 
         return htmlify(
             render_template(
-                "liked.html", liked=liked, older_than=older_than, newer_than=newer_than
+                "liked.html", liked=liked, older_than=older_than,
+                newer_than=newer_than
             )
         )
 
-    q = {"meta.deleted": False, "meta.undo": False, "type": ActivityType.LIKE.value}
+    q = {"meta.deleted": False,
+         "meta.undo": False,
+         "type": ActivityType.LIKE.value}
     return activitypubify(
         **activitypub.build_ordered_collection(
             DB.activities,

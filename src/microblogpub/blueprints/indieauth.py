@@ -14,7 +14,6 @@ from flask import request
 from flask import session
 from flask import url_for
 from itsdangerous import BadSignature
-
 from microblogpub.config import DB
 from microblogpub.config import JWT
 from microblogpub.core.shared import _get_ip

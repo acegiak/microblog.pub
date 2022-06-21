@@ -1,5 +1,4 @@
 import pymongo
-
 from microblogpub.config import DB
 from microblogpub.config import MEDIA_CACHE
 from microblogpub.core.meta import MetaKey

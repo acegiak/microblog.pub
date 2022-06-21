@@ -6,11 +6,10 @@ from typing import Dict
 from typing import Set
 
 from little_boxes import activitypub as ap
-from poussetaches import PousseTaches
-
 from microblogpub.config import DISABLE_WEBMENTIONS
 from microblogpub.config import MEDIA_CACHE
 from microblogpub.utils import parse_datetime
+from poussetaches import PousseTaches
 
 p = PousseTaches(
     os.getenv("MICROBLOGPUB_POUSSETACHES_HOST", "http://localhost:7991"),

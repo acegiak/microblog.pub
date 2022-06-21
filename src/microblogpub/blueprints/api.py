@@ -21,8 +21,6 @@ from little_boxes import activitypub as ap
 from little_boxes.content_helper import parse_markdown
 from little_boxes.errors import ActivityNotFoundError
 from little_boxes.errors import NotFromOutboxError
-from werkzeug.utils import secure_filename
-
 from microblogpub import config
 from microblogpub.config import ADMIN_API_KEY
 from microblogpub.config import BASE_URL
@@ -51,6 +49,7 @@ from microblogpub.core.shared import login_required
 from microblogpub.core.tasks import Tasks
 from microblogpub.utils import emojis
 from microblogpub.utils import now
+from werkzeug.utils import secure_filename
 
 _logger = logging.getLogger(__name__)
 

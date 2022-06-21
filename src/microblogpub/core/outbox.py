@@ -5,7 +5,6 @@ from typing import Any
 from typing import Dict
 
 from little_boxes import activitypub as ap
-
 from microblogpub.core.activitypub import handle_replies
 from microblogpub.core.db import find_one_activity
 from microblogpub.core.db import update_many_activities
