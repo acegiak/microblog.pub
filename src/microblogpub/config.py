@@ -24,7 +24,13 @@ from microblogpub.utils.media import MediaCache
 log = logging.getLogger(__name__)
 
 ROOT_DIR = Path(".").absolute()
-TEMPLATE_DIR = Path("src/templates").absolute()
+
+if int(os.environ.get("MICROBLOGPUBDEV")) == 1:
+    SASS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../sass")
+    TEMPLATE_DIR = Path("src/templates").absolute()
+else:
+    TEMPLATE_DIR = Path("./templates").absolute()
+    SASS_DIR = Path("./sass").absolute()
 
 log.info(f"ROOT_DIR: {ROOT_DIR}")
 
@@ -91,7 +97,6 @@ DEFAULT_CTX = [
     {"@language": "und"},
 ]
 
-SASS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../sass")
 theme_css = f"$primary-color: {THEME_COLOR};\n"
 with open(os.path.join(SASS_DIR, f"{THEME_STYLE.value}.scss")) as f:
     theme_css += f.read()
