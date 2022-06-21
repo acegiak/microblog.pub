@@ -19,13 +19,12 @@ ENV MICROBLOGPUB_POUSSETACHES_HOST=localhost:7991 \
 FROM app as dev
 WORKDIR /app
 ENV FLASK_DEBUG=1
-COPY config/me.yml config/
+COPY config/me.yml config/ 
 COPY run_dev.sh ./
 CMD ["./run_dev.sh"]
 
 FROM app as prod
 WORKDIR /app
-RUN apt-get update && apt-get install -y git curl
 COPY run.sh ./
 RUN pip install --no-cache \
     --disable-pip-version-check \
