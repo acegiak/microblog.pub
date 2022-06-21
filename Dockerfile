@@ -13,7 +13,7 @@ RUN pip install /install/dist/microblogpub-*.whl && rm -r /install
 WORKDIR /app
 ENV MICROBLOGPUB_POUSSETACHES_HOST=localhost:7991 \
     MICROBLOGPUB_MONGODB_HOST=localhost:27017 \
-    POUSSETACHES_AUTH_KEY="1234567890"\
+    POUSSETACHES_AUTH_KEY="1234"\
     MICROBLOGPUB_INTERNAL_HOST="http://host.docker.internal:5005"
 
 FROM app as dev

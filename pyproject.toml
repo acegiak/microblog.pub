@@ -32,6 +32,7 @@ pymongo = "^4.1.1"
 little-boxes = {git = "https://github.com/howaboutudance/little-boxes.git", rev = "96c67a9"}
 poussetaches = "^0.2.0"
 opengraph = {git = "https://github.com/erikriver/opengraph.git"}
+pytest-env = "^0.6.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2"
@@ -60,9 +61,17 @@ force_single_line=true
 src_paths=["src/microblog.pub", "src/tests"]
 
 [tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
 markers =  [
     "integration",
     ]
+testpaths = [
+    "src/tests"
+]
+env = [
+    "MICROBLOGPUBDEV = 1"
+]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

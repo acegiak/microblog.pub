@@ -25,7 +25,7 @@ log = logging.getLogger(__name__)
 
 ROOT_DIR = Path(".").absolute()
 
-if os.environ.get("MICROBLOGPUBDEV") == 1:
+if int(os.environ.get("MICROBLOGPUBDEV")) == 1:
     SASS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../sass")
     TEMPLATE_DIR = Path("src/templates").absolute()
 else:

@@ -52,6 +52,10 @@ stop:
 .PHONY: dev
 dev: | css reload-deps microblogpub-dev
 
+.PHONY: test
+test: dev
+	poetry run pytest
+
 # publish-image pushes image to container reigstry(cr), assume CONT_EXEC is
 # authenecticated against cr
 .PHONY: publish-image
