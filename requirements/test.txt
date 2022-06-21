@@ -1,6 +1,0 @@
--r common.txt
-black
-pytest
-requests
-mypy
-tox
