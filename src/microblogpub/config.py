@@ -22,13 +22,8 @@ log = logging.getLogger(__name__)
 
 ROOT_DIR = Path(".").absolute()
 
-if int(os.environ.get("MICROBLOGPUBDEV")) == 1:
-    SASS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                            "../sass")
-    TEMPLATE_DIR = Path("src/templates").absolute()
-else:
-    TEMPLATE_DIR = Path("./templates").absolute()
-    SASS_DIR = Path("./sass").absolute()
+TEMPLATE_DIR = Path("./templates").absolute()
+SASS_DIR = Path("./sass").absolute()
 
 log.info(f"ROOT_DIR: {ROOT_DIR}")
 

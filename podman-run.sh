@@ -19,6 +19,6 @@ podman run -dt --pod web \
     -e COMPOSE_PROJECT_NAME=microblogpub \
     -v ./config:/app/config \
     -v ./static:/app/static \
-	-v ./src/templates:/app/templates \
-	-v ./src/sass:/app/sass \
+	-v ./templates:/app/templates:z \
+	-v ./sass:/app/sass:z \
     localhost/microblogpub:latest
