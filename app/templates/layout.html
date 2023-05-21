@@ -9,6 +9,10 @@
 <link rel="alternate" href="{{ url_for("rss_feed") }}" type="application/rss+xml" title="{{ local_actor.display_name}}'s microblog">
 <link rel="alternate" href="{{ url_for("atom_feed") }}" type="application/atom+xml" title="{{ local_actor.display_name}}'s microblog">
 <link rel="icon" type="image/x-icon" href="{{ BASE_URL }}/static/favicon.ico">
+{% if '/admin' in request.url.path %}
+<link rel="manifest" href="{{BASE_URL}}/admin/manifest.json" />
+{% endif %}
+
 <style>{{ highlight_css }}</style>
 {% block head %}{% endblock %}
 </head>

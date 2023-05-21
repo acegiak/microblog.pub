@@ -1596,7 +1596,6 @@ Disallow: /admin
 Disallow: /remote_interaction
 Disallow: /remote_follow"""
 
-
 async def _get_outbox_for_feed(db_session: AsyncSession) -> list[models.OutboxObject]:
     return (
         (
@@ -1725,3 +1724,22 @@ async def atom_feed(
         (await _gen_rss_feed(db_session, is_rss=False)).atom_str(),
         headers={"Content-Type": "application/atom+xml"},
     )
+
+
+@app.get("/admin/manifest.json")
+async def admin_pwa():
+    manifest = {
+        "name":LOCAL_ACTOR.display_name+" mb admin",
+        "short_name": USERNAME+" mb",
+        "scope":"/",
+        "start_url":BASE_URL+"/admin/stream",
+        "description":LOCAL_ACTOR.display_name+"'s microblog admin",
+        "theme_color":"#080808",
+        "background_color":"#080808",
+        "display":"standalone",
+        "orientation":"any",
+        "icons":[
+            {"src":BASE_URL+"/static/icon.png","sizes":"400x400"}
+        ]
+    }
+    return manifest
