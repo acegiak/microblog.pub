@@ -199,6 +199,7 @@ app.mount(
     name="custom_emoji",
 )
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
+app.mount("/etc", StaticFiles(directory="data/etc"), name="etc")
 app.include_router(admin.router, prefix="/admin")
 app.include_router(admin.unauthenticated_router, prefix="/admin")
 app.include_router(indieauth.router)
