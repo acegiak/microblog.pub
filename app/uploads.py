@@ -48,28 +48,34 @@ async def save_upload(db_session: AsyncSession, f: UploadFile) -> models.Upload:
 
     if f.content_type.startswith("image") and not f.content_type == "image/gif":
         with Image.open(f.file) as _original_image:
+            logger.info(f"do transpose")
             # Fix image orientation (as we will remove the info from the EXIF
             # metadata)
             original_image = ImageOps.exif_transpose(_original_image)
+            if 'exif' in original_image.info:
+               del original_image.info['exif']
+            original_image.save(dest_filename,
+                format=_original_image.format)
 
-            # Re-creating the image drop the EXIF metadata
-            destination_image = Image.new(
-                original_image.mode,
-                original_image.size,
-            )
-            destination_image.putdata(original_image.getdata())
-            destination_image.save(
-                dest_filename,
-                format=_original_image.format,  # type: ignore
-            )
-
+            # # Re-creating the image drop the EXIF metadata
+            # destination_image = Image.new(
+            #     original_image.mode,
+            #     original_image.size,
+            # )
+            # destination_image.putdata(original_image.getdata())
+            # destination_image.save(
+            #     dest_filename,
+            #     format=_original_image.format,  # type: ignore
+            # )
+            logger.info(f"Attempting blurhash.encode")
             with open(dest_filename, "rb") as dest_f:
                 image_blurhash = blurhash.encode(dest_f, x_components=4, y_components=3)
-
+            
+            logger.info(f"Attempting to save thumbnail")
             try:
-                width, height = destination_image.size
-                destination_image.thumbnail((740, 740))
-                destination_image.save(
+                width, height = original_image.size
+                original_image.thumbnail((740, 740))
+                original_image.save(
                     UPLOAD_DIR / f"{content_hash}_resized",
                     format="webp",
                 )
